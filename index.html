@@ -82,44 +82,43 @@
                             <input type="text" id="req_professor" required class="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" placeholder="รศ. นพ. ...">
                         </div>
                     </div>
-
-                    <!-- ตารางรายการ -->
-                    <div class="mb-8">
-                        <div class="flex justify-between items-center mb-3">
-                            <label class="block text-sm font-medium text-slate-700">รายละเอียดรายการ</label>
-                            <button type="button" onclick="addRequestRow()" class="text-sm bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition"><i class="fa-solid fa-plus"></i> เพิ่มรายการ</button>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left text-sm border border-slate-200 min-w-[600px]" id="requestTable">
-                                <thead class="bg-slate-100 text-slate-600">
-                                    <tr>
-                                        <th class="p-3 w-2/5 font-medium">รายการ</th>
-                                        <th class="p-3 w-1/4 font-medium">หมายเหตุ</th>
-                                        <th class="p-3 text-right w-1/4 font-medium">จำนวนเงิน</th>
-                                        <th class="p-3 w-10"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr class="border-t">
-                                        <td class="p-2"><input type="text" class="item-name w-full border border-slate-300 rounded p-2 outline-none focus:border-blue-500" required></td>
-                                        <td class="p-2"><input type="text" class="item-note w-full border border-slate-300 rounded p-2 outline-none focus:border-blue-500"></td>
-                                        <td class="p-2"><input type="number" step="0.01" onchange="calculateTotal()" class="amount-input w-full border border-slate-300 rounded p-2 text-right outline-none focus:border-blue-500" required></td>
-                                        <td class="p-2 text-center"><button type="button" onclick="removeRow(this)" class="text-red-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button></td>
-                                    </tr>
-                                </tbody>
-                                <tfoot class="bg-blue-50 text-blue-900">
-                                    <tr>
-                                        <td colspan="2" class="p-3 text-right font-bold">
-                                            รวมทั้งสิ้น<br>
-                                            <span id="req_total_text" class="text-xs font-normal text-blue-700">(ศูนย์บาทถ้วน)</span>
-                                        </td>
-                                        <td class="p-3 text-right font-bold text-lg align-top" id="req_total">0.00</td>
-                                        <td></td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                    </div>
+<!-- ตารางรายการ -->
+<div class="mb-8">
+    <div class="flex justify-between items-center mb-3">
+        <label class="block text-sm font-medium text-slate-700">รายละเอียดรายการ</label>
+        <button type="button" onclick="addRequestRow()" class="text-sm bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition"><i class="fa-solid fa-plus"></i> เพิ่มรายการ</button>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm border border-slate-200 min-w-[600px]" id="requestTable">
+            <thead class="bg-slate-100 text-slate-600">
+                <tr>
+                    <th class="p-3 w-2/5 font-medium">รายการ</th>
+                    <th class="p-3 w-1/4 font-medium">หมายเหตุ</th>
+                    <th class="p-3 text-right w-1/4 font-medium">จำนวนเงิน</th>
+                    <th class="p-3 w-10"></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="border-t">
+                    <td class="p-2"><input type="text" class="item-name w-full border border-slate-300 rounded p-2 focus:border-blue-500" required></td>
+                    <td class="p-2"><input type="text" class="item-note w-full border border-slate-300 rounded p-2 focus:border-blue-500"></td>
+                    <td class="p-2"><input type="number" step="any" oninput="calculateTotal()" class="amount-input w-full border border-slate-300 rounded p-2 text-right focus:border-blue-500" required></td>
+                    <td class="p-2 text-center"><button type="button" onclick="removeRow(this)" class="text-red-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button></td>
+                </tr>
+            </tbody>
+            <tfoot class="bg-blue-50 text-blue-900">
+                <tr>
+                    <td colspan="2" class="p-3 text-right font-bold">
+                        รวมทั้งสิ้น<br>
+                        <span id="req_total_text" class="text-xs font-normal text-blue-700">(ศูนย์บาทถ้วน)</span>
+                    </td>
+                    <td class="p-3 text-right font-bold text-lg align-top" id="req_total">0.00</td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
 
                     <!-- ข้อมูลธนาคาร -->
                     <div class="bg-blue-50 p-6 rounded-xl border border-blue-100 mb-8">

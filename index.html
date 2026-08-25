@@ -4,13 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ระบบจัดการเงินรองจ่ายออนไลน์</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- Google Fonts: Sarabun -->
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
@@ -24,116 +20,145 @@
 
     <!-- Header -->
     <header class="bg-slate-900 text-white p-4 shadow-md">
-        <div class="max-w-4xl mx-auto flex items-center gap-3">
+        <div class="max-w-4xl mx-auto flex items-center justify-center sm:justify-start gap-3">
             <i class="fa-solid fa-wallet text-2xl text-blue-400"></i>
             <h1 class="text-xl font-bold">AdvancePay (Online System)</h1>
         </div>
     </header>
 
+    <!-- Menu Bar (สเตป 1-2-3) -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-20 shadow-sm">
+        <div class="max-w-4xl mx-auto flex overflow-x-auto">
+            <button onclick="switchTab('tab-request', this)" class="nav-btn flex-1 whitespace-nowrap py-4 px-4 sm:px-6 text-center border-b-2 border-blue-600 text-blue-600 font-bold bg-blue-50/50 transition-colors">
+                <i class="fa-solid fa-1 mr-1"></i> ขอยืมเงิน
+            </button>
+            <button onclick="switchTab('tab-clearance', this)" class="nav-btn flex-1 whitespace-nowrap py-4 px-4 sm:px-6 text-center border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-colors">
+                <i class="fa-solid fa-2 mr-1"></i> แจ้งค่าใช้จ่าย (เคลียร์)
+            </button>
+            <button onclick="switchTab('tab-refund', this)" class="nav-btn flex-1 whitespace-nowrap py-4 px-4 sm:px-6 text-center border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-colors">
+                <i class="fa-solid fa-3 mr-1"></i> คืนเงิน
+            </button>
+        </div>
+    </nav>
+
     <!-- Main Content -->
     <main class="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6">
         
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
-            <h2 class="text-2xl font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">ฟอร์มขอยืมเงินรองจ่าย</h2>
+        <!-- ขั้นตอนที่ 1 -->
+        <div id="tab-request" class="tab-content active">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
+                <h2 class="text-2xl font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">ฟอร์มขอยืมเงินรองจ่าย</h2>
 
-            <form id="requestForm" onsubmit="handleRequestSubmit(event)">
-                
-                <!-- ข้อมูลผู้ติดต่อ -->
-                <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100 mb-8">
-                    <h3 class="font-semibold text-indigo-800 mb-4"><i class="fa-regular fa-envelope mr-2"></i> ข้อมูลผู้ขอยืมเงิน (ผู้รับเอกสาร)</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm text-indigo-700 mb-1">ชื่อผู้จัดทำ (ผู้กรอก) <span class="text-red-500">*</span></label>
-                            <input type="text" id="req_requester" required class="w-full p-2.5 border border-indigo-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm text-indigo-700 mb-1">อีเมลผู้ขอ (เพื่อรับสำเนา PDF) <span class="text-red-500">*</span></label>
-                            <input type="email" id="req_email" required class="w-full p-2.5 border border-indigo-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500">
+                <form id="requestForm" onsubmit="handleRequestSubmit(event)">
+                    <!-- ข้อมูลผู้ติดต่อ -->
+                    <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100 mb-8">
+                        <h3 class="font-semibold text-indigo-800 mb-4"><i class="fa-regular fa-envelope mr-2"></i> ข้อมูลผู้ขอยืมเงิน</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div><label class="block text-sm text-indigo-700 mb-1">ชื่อผู้จัดทำ (ผู้กรอก) <span class="text-red-500">*</span></label><input type="text" id="req_requester" required class="w-full p-2.5 border border-indigo-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"></div>
+                            <div><label class="block text-sm text-indigo-700 mb-1">อีเมลผู้ขอ (เพื่อรับสำเนา PDF) <span class="text-red-500">*</span></label><input type="email" id="req_email" required class="w-full p-2.5 border border-indigo-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"></div>
                         </div>
                     </div>
-                </div>
 
-                <!-- รายละเอียดโครงการ -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-                    <div class="sm:col-span-2">
-                        <label class="block text-sm font-medium text-slate-700 mb-1">เรียน (ผู้อนุมัติ)</label>
-                        <input type="text" id="req_to" class="w-full p-2.5 border border-slate-300 rounded-lg outline-none" value="หัวหน้าภาควิชาโสต ศอ นาสิกวิทยา">
-                    </div>
-                    <div class="sm:col-span-2">
-                        <label class="block text-sm font-medium text-slate-700 mb-1">ชื่องาน / โครงการ <span class="text-red-500">*</span></label>
-                        <input type="text" id="req_event" required class="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" placeholder="เช่น อบรม Basic science...">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">วันที่จัดงาน <span class="text-red-500">*</span></label>
-                        <input type="text" id="req_date" required class="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" placeholder="เช่น 14-17 ก.ย. 2569">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">ชื่ออาจารย์เจ้าของงาน <span class="text-red-500">*</span></label>
-                        <input type="text" id="req_professor" required class="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" placeholder="รศ. นพ. ...">
-                    </div>
-                </div>
-
-                <!-- ตารางรายการ -->
-                <div class="mb-8">
-                    <div class="flex justify-between items-center mb-3">
-                        <label class="block text-sm font-medium text-slate-700">รายละเอียดรายการ</label>
-                        <button type="button" onclick="addRequestRow()" class="text-sm bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition"><i class="fa-solid fa-plus"></i> เพิ่มรายการ</button>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm border border-slate-200 min-w-[600px]" id="requestTable">
-                            <thead class="bg-slate-100 text-slate-600">
-                                <tr>
-                                    <th class="p-3 w-2/5 font-medium">รายการ</th>
-                                    <th class="p-3 w-1/4 font-medium">หมายเหตุ</th>
-                                    <th class="p-3 text-right w-1/4 font-medium">จำนวนเงิน</th>
-                                    <th class="p-3 w-10"></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="border-t">
-                                    <td class="p-2"><input type="text" class="item-name w-full border border-slate-300 rounded p-2 outline-none focus:border-blue-500" required></td>
-                                    <td class="p-2"><input type="text" class="item-note w-full border border-slate-300 rounded p-2 outline-none focus:border-blue-500"></td>
-                                    <td class="p-2"><input type="number" step="0.01" onchange="calculateTotal()" class="amount-input w-full border border-slate-300 rounded p-2 text-right outline-none focus:border-blue-500" required></td>
-                                    <td class="p-2 text-center"><button type="button" onclick="removeRow(this)" class="text-red-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button></td>
-                                </tr>
-                            </tbody>
-                            <tfoot class="bg-blue-50 font-bold text-blue-900">
-                                <tr>
-                                    <td colspan="2" class="p-3 text-right">รวมทั้งสิ้น</td>
-                                    <td class="p-3 text-right" id="req_total">0.00</td>
-                                    <td></td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- ข้อมูลธนาคาร -->
-                <div class="bg-blue-50 p-6 rounded-xl border border-blue-100 mb-8">
-                    <h3 class="font-semibold text-blue-800 mb-4"><i class="fa-solid fa-building-columns mr-2"></i> บัญชีรับเงินโอน</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm text-blue-700 mb-1">เลขที่บัญชี</label>
-                            <input type="text" id="req_bank_no" required class="w-full p-2.5 border border-blue-200 rounded-lg outline-none">
+                    <!-- รายละเอียดโครงการ -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+                        <div class="sm:col-span-2">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">เรียน (ผู้อนุมัติ)</label>
+                            <input type="text" id="req_to" class="w-full p-2.5 border border-slate-300 rounded-lg outline-none" value="หัวหน้าภาควิชาโสต ศอ นาสิกวิทยา">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">ชื่องาน / โครงการ <span class="text-red-500">*</span></label>
+                            <input type="text" id="req_event" required class="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" placeholder="เช่น อบรม Basic science...">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">สถานที่จัดงาน <span class="text-red-500">*</span></label>
+                            <input type="text" id="req_location" required class="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" placeholder="เช่น ห้องประชุม 312/1 อาคาร อปร.">
                         </div>
                         <div>
-                            <label class="block text-sm text-blue-700 mb-1">ชื่อบัญชี</label>
-                            <input type="text" id="req_bank_name" required class="w-full p-2.5 border border-blue-200 rounded-lg outline-none">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">วันที่จัดงาน <span class="text-red-500">*</span></label>
+                            <input type="text" id="req_date" required class="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" placeholder="เช่น 14-17 ก.ย. 2569">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">ชื่ออาจารย์เจ้าของงาน <span class="text-red-500">*</span></label>
+                            <input type="text" id="req_professor" required class="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" placeholder="รศ. นพ. ...">
                         </div>
                     </div>
-                    <p class="text-sm text-red-500 mt-4 bg-red-50 p-3 rounded-lg border border-red-100">
-                        <i class="fa-solid fa-circle-info mr-1"></i> * กรุณาใช้บัญชีธนาคารไทยพาณิชย์ สาขาในกรุงเทพ และปริมณฑลเท่านั้น
-                    </p>
-                </div>
 
-                <div class="text-right">
-                    <button type="submit" id="submitBtn" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg shadow-lg transition-all">
-                        <i class="fa-solid fa-paper-plane mr-2"></i> ส่งคำร้อง & สร้าง PDF
-                    </button>
-                </div>
-            </form>
+                    <!-- ตารางรายการ -->
+                    <div class="mb-8">
+                        <div class="flex justify-between items-center mb-3">
+                            <label class="block text-sm font-medium text-slate-700">รายละเอียดรายการ</label>
+                            <button type="button" onclick="addRequestRow()" class="text-sm bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition"><i class="fa-solid fa-plus"></i> เพิ่มรายการ</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm border border-slate-200 min-w-[600px]" id="requestTable">
+                                <thead class="bg-slate-100 text-slate-600">
+                                    <tr>
+                                        <th class="p-3 w-2/5 font-medium">รายการ</th>
+                                        <th class="p-3 w-1/4 font-medium">หมายเหตุ</th>
+                                        <th class="p-3 text-right w-1/4 font-medium">จำนวนเงิน</th>
+                                        <th class="p-3 w-10"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="border-t">
+                                        <td class="p-2"><input type="text" class="item-name w-full border border-slate-300 rounded p-2 outline-none focus:border-blue-500" required></td>
+                                        <td class="p-2"><input type="text" class="item-note w-full border border-slate-300 rounded p-2 outline-none focus:border-blue-500"></td>
+                                        <td class="p-2"><input type="number" step="0.01" onchange="calculateTotal()" class="amount-input w-full border border-slate-300 rounded p-2 text-right outline-none focus:border-blue-500" required></td>
+                                        <td class="p-2 text-center"><button type="button" onclick="removeRow(this)" class="text-red-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button></td>
+                                    </tr>
+                                </tbody>
+                                <tfoot class="bg-blue-50 text-blue-900">
+                                    <tr>
+                                        <td colspan="2" class="p-3 text-right font-bold">
+                                            รวมทั้งสิ้น<br>
+                                            <span id="req_total_text" class="text-xs font-normal text-blue-700">(ศูนย์บาทถ้วน)</span>
+                                        </td>
+                                        <td class="p-3 text-right font-bold text-lg align-top" id="req_total">0.00</td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- ข้อมูลธนาคาร -->
+                    <div class="bg-blue-50 p-6 rounded-xl border border-blue-100 mb-8">
+                        <h3 class="font-semibold text-blue-800 mb-4"><i class="fa-solid fa-building-columns mr-2"></i> บัญชีรับเงินโอน</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div><label class="block text-sm text-blue-700 mb-1">เลขที่บัญชี</label><input type="text" id="req_bank_no" required class="w-full p-2.5 border border-blue-200 rounded-lg outline-none"></div>
+                            <div><label class="block text-sm text-blue-700 mb-1">ชื่อบัญชี</label><input type="text" id="req_bank_name" required class="w-full p-2.5 border border-blue-200 rounded-lg outline-none"></div>
+                        </div>
+                        <p class="text-sm text-red-500 mt-4 bg-red-50 p-3 rounded-lg border border-red-100">
+                            <i class="fa-solid fa-circle-info mr-1"></i> * กรุณาใช้บัญชีธนาคารไทยพาณิชย์ สาขาในกรุงเทพ และปริมณฑลเท่านั้น
+                        </p>
+                    </div>
+
+                    <div class="text-right">
+                        <button type="submit" id="submitBtn" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg shadow-lg transition-all">
+                            <i class="fa-solid fa-paper-plane mr-2"></i> ส่งคำร้อง & สร้าง PDF
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
 
+        <!-- ขั้นตอนที่ 2 -->
+        <div id="tab-clearance" class="tab-content">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 text-center text-slate-500">
+                <i class="fa-solid fa-receipt text-4xl mb-4 text-slate-300"></i>
+                <h3 class="text-xl font-medium text-slate-700">ระบบแจ้งค่าใช้จ่าย (เคลียร์เงิน)</h3>
+                <p class="mt-2">ฟีเจอร์นี้จะเปิดให้ใช้งานในเร็วๆ นี้</p>
+            </div>
+        </div>
+
+        <!-- ขั้นตอนที่ 3 -->
+        <div id="tab-refund" class="tab-content">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 text-center text-slate-500">
+                <i class="fa-solid fa-hand-holding-dollar text-4xl mb-4 text-slate-300"></i>
+                <h3 class="text-xl font-medium text-slate-700">ระบบแจ้งคืนเงิน</h3>
+                <p class="mt-2">ฟีเจอร์นี้จะเปิดให้ใช้งานในเร็วๆ นี้</p>
+            </div>
+        </div>
     </main>
 
     <!-- Footer -->
@@ -143,6 +168,47 @@
 
     <!-- Scripts -->
     <script>
+        // ระบบแปลตัวเลขเป็นภาษาไทย
+        function getThaiBaht(amount) {
+            let number = parseFloat(amount.toString().replace(/,/g, '')).toFixed(2);
+            let split = number.toString().split('.');
+            let integerPart = split[0]; let fractionalPart = split[1];
+            const words = ["", "หนึ่ง", "สอง", "สาม", "สี่", "ห้า", "หก", "เจ็ด", "แปด", "เก้า"];
+            const positions = ["", "สิบ", "ร้อย", "พัน", "หมื่น", "แสน", "ล้าน"];
+            function convert(str) {
+                if (str === '0' || str === '00') return '';
+                let result = '';
+                for (let i = 0; i < str.length; i++) {
+                    let digit = parseInt(str.charAt(i));
+                    let position = str.length - i - 1;
+                    if (digit !== 0) {
+                        if (position === 1 && digit === 1) result += 'สิบ';
+                        else if (position === 1 && digit === 2) result += 'ยี่สิบ';
+                        else if (position === 0 && digit === 1 && str.length > 1 && str.charAt(str.length-2) !== '0') result += 'เอ็ด';
+                        else result += words[digit] + positions[position];
+                    }
+                }
+                return result;
+            }
+            let result = convert(integerPart) + 'บาท';
+            if (fractionalPart === '00') result += 'ถ้วน'; else result += convert(fractionalPart) + 'สตางค์';
+            return result === 'บาทถ้วน' ? 'ศูนย์บาทถ้วน' : result;
+        }
+
+        // ระบบสลับแท็บเมนูบาร์
+        function switchTab(tabId, btnElement) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => {
+                el.classList.remove('border-blue-600', 'text-blue-600', 'font-bold', 'bg-blue-50/50');
+                el.classList.add('border-transparent', 'text-slate-500');
+            });
+            document.getElementById(tabId).classList.add('active');
+            if(btnElement) {
+                btnElement.classList.remove('border-transparent', 'text-slate-500');
+                btnElement.classList.add('border-blue-600', 'text-blue-600', 'font-bold', 'bg-blue-50/50');
+            }
+        }
+
         function addRequestRow() {
             const tbody = document.querySelector('#requestTable tbody');
             const tr = document.createElement('tr');
@@ -158,16 +224,14 @@
 
         function calculateTotal() {
             let total = 0;
-            document.querySelectorAll('.amount-input').forEach(input => { 
-                total += parseFloat(input.value || 0); 
-            });
+            document.querySelectorAll('.amount-input').forEach(input => { total += parseFloat(input.value || 0); });
+            // แสดงยอดรวมตัวเลข
             document.getElementById('req_total').innerText = total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            // แสดงยอดรวมภาษาไทย
+            document.getElementById('req_total_text').innerText = "(" + getThaiBaht(total) + ")";
         }
 
-        function removeRow(btn) { 
-            btn.closest('tr').remove(); 
-            calculateTotal();
-        }
+        function removeRow(btn) { btn.closest('tr').remove(); calculateTotal(); }
 
         function handleRequestSubmit(e) {
             e.preventDefault();
@@ -175,29 +239,19 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> กำลังประมวลผล...';
 
-            Swal.fire({
-                title: 'กำลังส่งข้อมูล...',
-                text: 'ระบบกำลังสร้าง PDF และส่งอีเมล ห้ามปิดหน้านี้',
-                icon: 'info',
-                allowOutsideClick: false,
-                didOpen: () => { Swal.showLoading(); }
-            });
+            Swal.fire({ title: 'กำลังส่งข้อมูล...', text: 'ระบบกำลังสร้าง PDF และส่งอีเมล ห้ามปิดหน้านี้', icon: 'info', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
 
-            // ดึงข้อมูลรายการ
             let items = [];
             document.querySelectorAll('#requestTable tbody tr').forEach(row => {
-                items.push({
-                    name: row.querySelector('.item-name').value,
-                    note: row.querySelector('.item-note').value,
-                    amount: row.querySelector('.amount-input').value
-                });
+                items.push({ name: row.querySelector('.item-name').value, note: row.querySelector('.item-note').value, amount: row.querySelector('.amount-input').value });
             });
 
-            // รวบรวมข้อมูล
+            // เพิ่ม location ลงใน Data Payload
             const data = {
                 requesterEmail: document.getElementById('req_email').value,
                 to: document.getElementById('req_to').value,
                 event: document.getElementById('req_event').value,
+                location: document.getElementById('req_location').value,
                 date: document.getElementById('req_date').value,
                 professor: document.getElementById('req_professor').value,
                 requester: document.getElementById('req_requester').value,
@@ -208,38 +262,16 @@
             };
 
             // ===================================================================
-            // ⚠️ สำคัญมาก: นำ URL ของ Apps Script (ที่ลงท้ายด้วย /exec) มาใส่ที่นี่
+            const WEB_APP_URL = 'const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzrBKlYRbb2smx6quwtF4UBzyK1SXWTh2FvG0R_mkZrOthExGHHS5jyNlS8Jrz1yGVN/exec';';
             // ===================================================================
-          const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzrBKlYRbb2smx6quwtF4UBzyK1SXWTh2FvG0R_mkZrOthExGHHS5jyNlS8Jrz1yGVN/exec';
 
-            fetch(WEB_APP_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'text/plain;charset=utf-8',
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(res => {
-                if(res.status === "success") {
-                    Swal.fire({ 
-                        title: 'สำเร็จ!', 
-                        html: `ส่งคำร้องและเอกสาร PDF เรียบร้อยแล้ว<br><br><span class="text-sm text-gray-500">รหัสอ้างอิง: ${res.reqId}</span>`, 
-                        icon: 'success' 
-                    });
-                    e.target.reset();
-                    calculateTotal();
-                } else {
-                    Swal.fire('ข้อผิดพลาด', res.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error');
-                }
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> ส่งคำร้อง & สร้าง PDF';
-            })
-            .catch(err => {
-                Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ หรือ URL ไม่ถูกต้อง', 'error');
-                console.error(err);
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> ส่งคำร้อง & สร้าง PDF';
+            fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+            .then(() => {
+                Swal.fire({ title: 'สำเร็จ!', html: `ส่งคำร้องและเอกสาร PDF เรียบร้อยแล้ว`, icon: 'success' });
+                e.target.reset(); calculateTotal(); btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> ส่งคำร้อง & สร้าง PDF';
+            }).catch(err => {
+                Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
+                btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> ส่งคำร้อง & สร้าง PDF';
             });
         }
     </script>

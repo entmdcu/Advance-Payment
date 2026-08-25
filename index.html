@@ -164,115 +164,115 @@
     <footer class="bg-slate-800 text-slate-400 text-center p-4 text-xs mt-10">
         &copy; 2026 Finance System Hosted on GitHub Pages
     </footer>
-
-    <!-- Scripts -->
-    <script>
-        // ระบบแปลตัวเลขเป็นภาษาไทย
-        function getThaiBaht(amount) {
-            let number = parseFloat(amount.toString().replace(/,/g, '')).toFixed(2);
-            let split = number.toString().split('.');
-            let integerPart = split[0]; let fractionalPart = split[1];
-            const words = ["", "หนึ่ง", "สอง", "สาม", "สี่", "ห้า", "หก", "เจ็ด", "แปด", "เก้า"];
-            const positions = ["", "สิบ", "ร้อย", "พัน", "หมื่น", "แสน", "ล้าน"];
-            function convert(str) {
-                if (str === '0' || str === '00') return '';
-                let result = '';
-                for (let i = 0; i < str.length; i++) {
-                    let digit = parseInt(str.charAt(i));
-                    let position = str.length - i - 1;
-                    if (digit !== 0) {
-                        if (position === 1 && digit === 1) result += 'สิบ';
-                        else if (position === 1 && digit === 2) result += 'ยี่สิบ';
-                        else if (position === 0 && digit === 1 && str.length > 1 && str.charAt(str.length-2) !== '0') result += 'เอ็ด';
-                        else result += words[digit] + positions[position];
-                    }
+<script>
+    function getThaiBaht(amount) {
+        let number = parseFloat(amount.toString().replace(/,/g, '')).toFixed(2);
+        let split = number.toString().split('.');
+        let integerPart = split[0]; let fractionalPart = split[1];
+        const words = ["", "หนึ่ง", "สอง", "สาม", "สี่", "ห้า", "หก", "เจ็ด", "แปด", "เก้า"];
+        const positions = ["", "สิบ", "ร้อย", "พัน", "หมื่น", "แสน", "ล้าน"];
+        function convert(str) {
+            if (str === '0' || str === '00') return '';
+            let result = '';
+            for (let i = 0; i < str.length; i++) {
+                let digit = parseInt(str.charAt(i));
+                let position = str.length - i - 1;
+                if (digit !== 0) {
+                    if (position === 1 && digit === 1) result += 'สิบ';
+                    else if (position === 1 && digit === 2) result += 'ยี่สิบ';
+                    else if (position === 0 && digit === 1 && str.length > 1 && str.charAt(str.length-2) !== '0') result += 'เอ็ด';
+                    else result += words[digit] + positions[position];
                 }
-                return result;
             }
-            let result = convert(integerPart) + 'บาท';
-            if (fractionalPart === '00') result += 'ถ้วน'; else result += convert(fractionalPart) + 'สตางค์';
-            return result === 'บาทถ้วน' ? 'ศูนย์บาทถ้วน' : result;
+            return result;
         }
+        let result = convert(integerPart) + 'บาท';
+        if (fractionalPart === '00') result += 'ถ้วน'; else result += convert(fractionalPart) + 'สตางค์';
+        return result === 'บาทถ้วน' ? 'ศูนย์บาทถ้วน' : result;
+    }
 
-        // ระบบสลับแท็บเมนูบาร์
-        function switchTab(tabId, btnElement) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(el => {
-                el.classList.remove('border-blue-600', 'text-blue-600', 'font-bold', 'bg-blue-50/50');
-                el.classList.add('border-transparent', 'text-slate-500');
+    function switchTab(tabId, btnElement) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(el => {
+            el.classList.remove('border-blue-600', 'text-blue-600', 'font-bold', 'bg-blue-50/50');
+            el.classList.add('border-transparent', 'text-slate-500');
+        });
+        document.getElementById(tabId).classList.add('active');
+        if(btnElement) {
+            btnElement.classList.remove('border-transparent', 'text-slate-500');
+            btnElement.classList.add('border-blue-600', 'text-blue-600', 'font-bold', 'bg-blue-50/50');
+        }
+    }
+
+    function addRequestRow() {
+        const tbody = document.querySelector('#requestTable tbody');
+        const tr = document.createElement('tr');
+        tr.className = 'border-t';
+        tr.innerHTML = `
+            <td class="p-2"><input type="text" class="item-name w-full border border-slate-300 rounded p-2 focus:border-blue-500" required></td>
+            <td class="p-2"><input type="text" class="item-note w-full border border-slate-300 rounded p-2 focus:border-blue-500"></td>
+            <td class="p-2"><input type="number" step="any" oninput="calculateTotal()" class="amount-input w-full border border-slate-300 rounded p-2 text-right focus:border-blue-500" required></td>
+            <td class="p-2 text-center"><button type="button" onclick="removeRow(this)" class="text-red-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button></td>
+        `;
+        tbody.appendChild(tr);
+    }
+
+    function calculateTotal() {
+        let total = 0;
+        document.querySelectorAll('.amount-input').forEach(input => { 
+            total += parseFloat(input.value || 0); 
+        });
+        document.getElementById('req_total').innerText = total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        document.getElementById('req_total_text').innerText = "(" + getThaiBaht(total) + ")";
+    }
+
+    function removeRow(btn) { 
+        btn.closest('tr').remove(); 
+        calculateTotal();
+    }
+
+    function handleRequestSubmit(e) {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> กำลังประมวลผล...';
+
+        Swal.fire({ title: 'กำลังส่งข้อมูล...', text: 'ระบบกำลังสร้าง PDF และส่งอีเมล ห้ามปิดหน้านี้', icon: 'info', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+        let items = [];
+        document.querySelectorAll('#requestTable tbody tr').forEach(row => {
+            items.push({ 
+                name: row.querySelector('.item-name').value, 
+                note: row.querySelector('.item-note').value, 
+                amount: row.querySelector('.amount-input').value 
             });
-            document.getElementById(tabId).classList.add('active');
-            if(btnElement) {
-                btnElement.classList.remove('border-transparent', 'text-slate-500');
-                btnElement.classList.add('border-blue-600', 'text-blue-600', 'font-bold', 'bg-blue-50/50');
-            }
-        }
+        });
 
-        function addRequestRow() {
-            const tbody = document.querySelector('#requestTable tbody');
-            const tr = document.createElement('tr');
-            tr.className = 'border-t';
-            tr.innerHTML = `
-                <td class="p-2"><input type="text" class="item-name w-full border border-slate-300 rounded p-2 outline-none focus:border-blue-500" required></td>
-                <td class="p-2"><input type="text" class="item-note w-full border border-slate-300 rounded p-2 outline-none focus:border-blue-500"></td>
-                <td class="p-2"><input type="number" step="0.01" onchange="calculateTotal()" class="amount-input w-full border border-slate-300 rounded p-2 text-right outline-none focus:border-blue-500" required></td>
-                <td class="p-2 text-center"><button type="button" onclick="removeRow(this); calculateTotal();" class="text-red-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button></td>
-            `;
-            tbody.appendChild(tr);
-        }
+        const data = {
+            requesterEmail: document.getElementById('req_email').value,
+            to: document.getElementById('req_to').value,
+            event: document.getElementById('req_event').value,
+            location: document.getElementById('req_location').value,
+            date: document.getElementById('req_date').value,
+            professor: document.getElementById('req_professor').value,
+            requester: document.getElementById('req_requester').value,
+            total: document.getElementById('req_total').innerText,
+            bankNo: document.getElementById('req_bank_no').value,
+            bankName: document.getElementById('req_bank_name').value,
+            items: items
+        };
 
-        function calculateTotal() {
-            let total = 0;
-            document.querySelectorAll('.amount-input').forEach(input => { total += parseFloat(input.value || 0); });
-            // แสดงยอดรวมตัวเลข
-            document.getElementById('req_total').innerText = total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            // แสดงยอดรวมภาษาไทย
-            document.getElementById('req_total_text').innerText = "(" + getThaiBaht(total) + ")";
-        }
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzrBKlYRbb2smx6quwtF4UBzyK1SXWTh2FvG0R_mkZrOthExGHHS5jyNlS8Jrz1yGVN/exec';
 
-        function removeRow(btn) { btn.closest('tr').remove(); calculateTotal(); }
-
-        function handleRequestSubmit(e) {
-            e.preventDefault();
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> กำลังประมวลผล...';
-
-            Swal.fire({ title: 'กำลังส่งข้อมูล...', text: 'ระบบกำลังสร้าง PDF และส่งอีเมล ห้ามปิดหน้านี้', icon: 'info', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-
-            let items = [];
-            document.querySelectorAll('#requestTable tbody tr').forEach(row => {
-                items.push({ name: row.querySelector('.item-name').value, note: row.querySelector('.item-note').value, amount: row.querySelector('.amount-input').value });
-            });
-
-            // เพิ่ม location ลงใน Data Payload
-            const data = {
-                requesterEmail: document.getElementById('req_email').value,
-                to: document.getElementById('req_to').value,
-                event: document.getElementById('req_event').value,
-                location: document.getElementById('req_location').value,
-                date: document.getElementById('req_date').value,
-                professor: document.getElementById('req_professor').value,
-                requester: document.getElementById('req_requester').value,
-                total: document.getElementById('req_total').innerText,
-                bankNo: document.getElementById('req_bank_no').value,
-                bankName: document.getElementById('req_bank_name').value,
-                items: items
-            };
-
-            // ===================================================================
-            const WEB_APP_URL = 'const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzrBKlYRbb2smx6quwtF4UBzyK1SXWTh2FvG0R_mkZrOthExGHHS5jyNlS8Jrz1yGVN/exec';';
-            // ===================================================================
-
-            fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
-            .then(() => {
-                Swal.fire({ title: 'สำเร็จ!', html: `ส่งคำร้องและเอกสาร PDF เรียบร้อยแล้ว`, icon: 'success' });
-                e.target.reset(); calculateTotal(); btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> ส่งคำร้อง & สร้าง PDF';
-            }).catch(err => {
-                Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
-                btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> ส่งคำร้อง & สร้าง PDF';
-            });
-        }
-    </script>
+        fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+        .then(() => {
+            Swal.fire({ title: 'สำเร็จ!', html: `ส่งคำร้องและเอกสาร PDF เรียบร้อยแล้ว`, icon: 'success' });
+            e.target.reset(); calculateTotal(); btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> ส่งคำร้อง & สร้าง PDF';
+        }).catch(err => {
+            Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
+            btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> ส่งคำร้อง & สร้าง PDF';
+        });
+    }
+</script>
 </body>
 </html>

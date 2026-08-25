@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจัดการเงินรองจ่ายออนไลน์ (GitHub Hosting)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        body { font-family: 'Sarabun', sans-serif; background-color: #f8fafc; }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col justify-between">
+
+    <header class="bg-slate-900 text-white p-4 shadow-md">
+        <div class="max-w-4xl mx-auto flex items-center gap-3">
+            <i class="fa-solid fa-wallet text-2xl text-blue-400"></i>
+            <h1 class="text-xl font-bold">AdvancePay (Online System)</h1>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-4xl w-full mx-auto p-6">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">ฟอร์มขอยืมเงินรองจ่าย</h2>
+
+            <form id="requestForm" onsubmit="handleRequestSubmit(event)">
+                <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100 mb-8">
+                    <h3 class="font-semibold text-indigo-800 mb-4"><i class="fa-regular fa-envelope mr-2"></i> ข้อมูลผู้ขอยืมเงิน (ผู้รับเอกสาร)</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm text-indigo-700 mb-1">ชื่อผู้จัดทำ (ผู้กรอก) <span class="text-red-500">*</span></label>
+                            <input type="text" id="req_requester" required class="w-full p-2 border border-indigo-200 rounded-lg outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-indigo-700 mb-1">อีเมลผู้ขอ (เพื่อรับสำเนา PDF) <span class="text-red-500">*</span></label>
+                            <input type="email" id="req_email" required class="w-full p-2 border border-indigo-200 rounded-lg outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-6 mb-8">
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">เรียน (ผู้อนุมัติ)</label>
+                        <input type="text" id="req_to" class="w-full p-2 border border-slate-300 rounded-lg" value="หัวหน้าภาควิชาโสต ศอ นาสิกวิทยา">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">ชื่องาน / โครงการ <span class="text-red-500">*</span></label>
+                        <input type="text" id="req_event" required class="w-full p-2 border border-slate-300 rounded-lg" placeholder="เช่น อบรม Basic science...">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">วันที่จัดงาน <span class="text-red-500">*</span></label>
+                        <input type="text" id="req_date" required class="w-full p-2 border border-slate-300 rounded-lg" placeholder="เช่น 14-17 ก.ย. 2569">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">ชื่ออาจารย์เจ้าของงาน <span class="text-red-500">*</span></label>
+                        <input type="text" id="req_professor" required class="w-full p-2 border border-slate-300 rounded-lg" placeholder="รศ. นพ. ...">
+                    </div>
+                </div>
+
+                <div class="mb-8">
+                    <div class="flex justify-between items-center mb-3">
+                        <label class="block text-sm font-medium text-slate-700">รายละเอียดรายการ</label>
+                        <button type="button" onclick="addRequestRow()" class="text-sm bg-blue-50 text-blue-600 px-3 py-1 rounded"><i class="fa-solid fa-plus"></i> เพิ่มรายการ</button>
+                    </div>
+                    <table class="w-full text-left text-sm border border-slate-200" id="requestTable">
+                        <thead class="bg-slate-100">
+                            <tr>
+                                <th class="p-2 w-1/2">รายการ</th>
+                                <th class="p-2">หมายเหตุ</th>
+                                <th class="p-2 text-right w-1/4">จำนวนเงิน</th>
+                                <th class="p-2 w-10"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-t">
+                                <td class="p-2"><input type="text" class="item-name w-full border rounded p-1" required></td>
+                                <td class="p-2"><input type="text" class="item-note w-full border rounded p-1"></td>
+                                <td class="p-2"><input type="number" onchange="calculateTotal()" class="amount-input w-full border rounded p-1 text-right" required></td>
+                                <td class="p-2 text-center"><button type="button" onclick="removeRow(this)" class="text-red-500"><i class="fa-solid fa-trash"></i></button></td>
+                            </tr>
+                        </tbody>
+                        <tfoot class="bg-blue-50 font-bold">
+                            <tr>
+                                <td colspan="2" class="p-2 text-right">รวมทั้งสิ้น</td>
+                                <td class="p-2 text-right" id="req_total">0.00</td>
+                               <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="bg-blue-50 p-6 rounded-xl border border-blue-100 mb-8">
+                    <h3 class="font-semibold text-blue-800 mb-4">บัญชีรับเงินโอน</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="block text-sm text-blue-700 mb-1">เลขที่บัญชี</label><input type="text" id="req_bank_no" required class="w-full p-2 border border-blue-200 rounded-lg"></div>
+                        <div><label class="block text-sm text-blue-700 mb-1">ชื่อบัญชี</label><input type="text" id="req_bank_name" required class="w-full p-2 border border-blue-200 rounded-lg"></div>
+                    </div>
+                    <p class="text-sm text-red-500 mt-3"><i class="fa-solid fa-circle-info mr-1"></i> * กรุณาใช้บัญชีธนาคารไทยพาณิชย์ สาขาในกรุงเทพ และปริมณฑลเท่านั้น</p>
+                </div>
+
+                <div class="text-right">
+                    <button type="submit" id="submitBtn" class="bg-blue-600 text-white font-medium py-3 px-8 rounded-lg shadow-lg">
+                        <i class="fa-solid fa-paper-plane mr-2"></i> ส่งคำร้อง & สร้าง PDF
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <footer class="bg-slate-800 text-slate-400 text-center p-4 text-xs mt-10">
+        &copy; 2026 Finance System Hosted on GitHub Pages
+    </footer>
+
+    <script>
+        function addRequestRow() {
+            const tbody = document.querySelector('#requestTable tbody');
+            const tr = document.createElement('tr');
+            tr.className = 'border-t';
+            tr.innerHTML = `
+                <td class="p-2"><input type="text" class="item-name w-full border rounded p-1" required></td>
+                <td class="p-2"><input type="text" class="item-note w-full border rounded p-1"></td>
+                <td class="p-2"><input type="number" onchange="calculateTotal()" class="amount-input w-full border rounded p-1 text-right" required></td>
+                <td class="p-2 text-center"><button type="button" onclick="removeRow(this); calculateTotal();" class="text-red-500"><i class="fa-solid fa-trash"></i></button></td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        function calculateTotal() {
+            let total = 0;
+            document.querySelectorAll('.amount-input').forEach(input => { total += parseFloat(input.value || 0); });
+            document.getElementById('req_total').innerText = total.toLocaleString('en-US', {minimumFractionDigits: 2});
+        }
+
+        function removeRow(btn) { btn.closest('tr').remove(); }
+
+        function handleRequestSubmit(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> กำลังประมวลผล...';
+
+            Swal.fire({
+                title: 'กำลังส่งข้อมูล...',
+                text: 'ระบบกำลังสร้าง PDF และส่งอีเมล ห้ามปิดหน้านี้',
+                icon: 'info',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            let items = [];
+            document.querySelectorAll('#requestTable tbody tr').forEach(row => {
+                items.push({
+                    name: row.querySelector('.item-name').value,
+                    note: row.querySelector('.item-note').value,
+                    amount: row.querySelector('.amount-input').value
+                });
+            });
+
+            const data = {
+                requesterEmail: document.getElementById('req_email').value,
+                to: document.getElementById('req_to').value,
+                event: document.getElementById('req_event').value,
+                date: document.getElementById('req_date').value,
+                professor: document.getElementById('req_professor').value,
+                requester: document.getElementById('req_requester').value,
+                total: document.getElementById('req_total').innerText,
+                bankNo: document.getElementById('req_bank_no').value,
+                bankName: document.getElementById('req_bank_name').value,
+                items: items
+            };
+
+            // ** ⚠️ สำคัญ: นำ URL ของ Apps Script Web App มาใส่ตรงนี้แทนเครื่องหมายคำพูดเดิม **
+            const WEB_APP_URL = 'ใส่_URL_ของ_Google_Apps_Script_ที่นี่';
+
+            fetch(AKfycbynDkbWgIHpahOCeA8qr-zhAY0WTZWOY2hmO59mCRPwdcNZ3bwMVJwr7iXNvzxQcmHE, {
+                method: 'POST',
+                mode: 'no-cors', // จำเป็นเมื่อยิงข้ามโดเมนจาก GitHub ไป GAS
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(() => {
+                Swal.fire({ title: 'สำเร็จ!', html: `ส่งคำร้องและสร้าง PDF เรียบร้อยแล้ว`, icon: 'success' });
+                e.target.reset();
+                calculateTotal();
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> ส่งคำร้อง & สร้าง PDF';
+            })
+            .catch(err => {
+                Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> ส่งคำร้อง & สร้าง PDF';
+            });
+        }
+    </script>
+</body>
+</html>

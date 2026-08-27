@@ -175,6 +175,21 @@
                     </button>
                 </div>
 
+   <!-- ============================================== -->
+        <!-- แท็บที่ 2: แจ้งค่าใช้จ่าย (เคลียร์เงิน) -->
+        <!-- ============================================== -->
+        <div id="tab-clearance" class="tab-content">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
+                <h2 class="text-2xl font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">แจ้งค่าใช้จ่าย (เคลียร์เงินรองจ่าย)</h2>
+
+                <!-- ช่องค้นหาเอกสาร -->
+                <div class="flex flex-col sm:flex-row gap-2 mb-6">
+                    <input type="text" id="search_reqId" class="flex-1 p-3 border border-slate-300 rounded-lg outline-none focus:border-blue-500" placeholder="ระบุเลขที่เอกสาร เช่น เงินรองจ่าย 001/2569">
+                    <button type="button" onclick="searchRequest()" class="bg-slate-800 hover:bg-slate-900 text-white px-6 py-3 rounded-lg font-medium transition-all">
+                        <i class="fa-solid fa-magnifying-glass mr-2"></i> ค้นหาข้อมูล
+                    </button>
+                </div>
+
                 <!-- ฟอร์มเคลียร์เงิน (จะแสดงเมื่อค้นหาเจอเท่านั้น) -->
                 <form id="clearanceForm" onsubmit="handleClearanceSubmit(event)" style="display: none;">
                     <div class="bg-blue-50 p-6 rounded-xl border border-blue-100 mb-6">
@@ -182,19 +197,41 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <p class="text-sm text-slate-700">ชื่องาน: <br><strong id="show_c_event" class="text-base">-</strong></p>
                             <p class="text-sm text-slate-700">ผู้ขอยืม: <br><strong id="show_c_prof" class="text-base">-</strong></p>
-                            <p class="text-sm text-slate-700 sm:col-span-2">ยอดเงินที่ยืมไป: <strong id="show_c_total" class="text-xl text-blue-600">-</strong> บาท</p>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 gap-6 mb-6">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">ยอดใช้จ่ายจริงทั้งหมด (บาท) <span class="text-red-500">*</span></label>
-                            <input type="number" step="0.01" id="c_actual_amount" required class="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-right" placeholder="0.00">
+                    <!-- ตารางรายการเพื่อกรอกยอดใช้จริง -->
+                    <div class="mb-6 overflow-x-auto">
+                        <table class="w-full text-left text-sm border border-slate-200 min-w-[700px]">
+                            <thead class="bg-slate-100 text-slate-600">
+                                <tr>
+                                    <th class="p-3 font-medium">รายการ (ที่ขอไว้)</th>
+                                    <th class="p-3 text-right font-medium">ยอดที่ขอยืม (บาท)</th>
+                                    <th class="p-3 text-right font-medium w-1/5">ยอดใช้จริง (บาท)</th>
+                                    <th class="p-3 font-medium w-1/4">แนบใบเสร็จ (รูป/PDF)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clearance_items_tbody">
+                                <!-- แถวรายการจะถูกสร้างอัตโนมัติจาก JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- สรุปยอดรวม -->
+                    <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 mb-6">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-slate-600 font-medium">ยอดรวมที่ยืมไป:</span>
+                            <div class="text-right">
+                                <span id="c_sum_req" class="text-lg font-bold text-slate-800">0.00</span> บาท<br>
+                                <span id="c_sum_req_text" class="text-xs text-slate-500"></span>
+                            </div>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">แนบรูปภาพใบเสร็จ / สลิปโอนเงิน (เลือกได้หลายไฟล์) <span class="text-red-500">*</span></label>
-                            <input type="file" id="c_files" multiple accept="image/*,application/pdf" required class="w-full p-3 border border-slate-300 rounded-lg bg-slate-50 cursor-pointer">
-                            <p class="text-xs text-slate-500 mt-2"><i class="fa-solid fa-circle-info mr-1"></i> รองรับไฟล์รูปภาพ (.jpg, .png) และ PDF</p>
+                        <div class="flex justify-between items-center border-t border-slate-200 pt-2">
+                            <span class="text-blue-600 font-bold">ยอดใช้จ่ายจริงทั้งหมด:</span>
+                            <div class="text-right">
+                                <span id="c_sum_actual" class="text-2xl font-bold text-blue-600">0.00</span> บาท<br>
+                                <span id="c_sum_actual_text" class="text-xs text-blue-600"></span>
+                            </div>
                         </div>
                     </div>
 
@@ -221,7 +258,7 @@
         // ==========================================
         // ⚠️ ใส่ Web App URL ของ Google Apps Script ที่นี่
         // ==========================================
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw-tRy0URzpw3ejkFTSfpXXw3SOTtmiOrbQtX8TjABwdFQIolcpsephym0SKYauSSM/exec';
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx_GZ-gCDFgKBMQ3SOSQ9t5YD_jDkYpuy_ZzW0RFiMFIpyUls-icERZ1L2v1X824kOE/exec';
 
         // ระบบเปลี่ยนแท็บ
         function switchTab(tabId, btnElement) {

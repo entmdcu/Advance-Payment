@@ -340,77 +340,64 @@
             });
         }
 
-        // --- ฟังก์ชันของหน้า 2 (เคลียร์เงิน) ---
+// --- ฟังก์ชันของหน้า 2 (เคลียร์เงิน) ---
         function searchRequest() {
             const reqId = document.getElementById('search_reqId').value;
             if(!reqId) return Swal.fire('แจ้งเตือน', 'กรุณากรอกเลขที่เอกสาร', 'warning');
 
-            Swal.fire({ title: 'กำลังค้นหา...', text: 'กรุณารอสักครู่', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+            Swal.fire({ title: 'กำลังค้นหา...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
 
             fetch(WEB_APP_URL, {
                 method: 'POST',
                 body: JSON.stringify({ action: 'search', searchId: reqId })
             })
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) throw new Error("Network response was not ok");
+                return res.json();
+            })
             .then(data => {
                 if(data.status === 'success') {
                     document.getElementById('show_c_event').innerText = data.event;
                     document.getElementById('show_c_prof').innerText = data.professor;
-                    document.getElementById('show_c_total').innerText = data.total;
-                    document.getElementById('clearanceForm').style.display = 'block';
-                    Swal.close();
+                    
+                    // สรุปยอดขอยืม (แก้บั๊กการอ่านค่าตัวเลข)
+                    let totalStr = data.total.toString().replace(/,/g, '');
+                    document.getElementById('c_sum_req').innerText = Number(totalStr).toLocaleString('en-US', {minimumFractionDigits: 2});
+                    document.getElementById('c_sum_req_text').innerText = "(" + getThaiBaht(totalStr) + ")";
+                    
+                    // สร้างแถวรายการ
+                    const tbody = document.getElementById('clearance_items_tbody');
+                    tbody.innerHTML = '';
+                    
+                    if(data.items && data.items.length > 0) {
+                        data.items.forEach((item, idx) => {
+                            tbody.innerHTML += `
+                                <tr class="border-t clearance-row">
+                                    <td class="p-3"><input type="text" class="c-item-name w-full bg-transparent outline-none font-medium text-slate-700" value="${item.name}" readonly></td>
+                                    <td class="p-3 text-right text-slate-600">${Number(item.amount).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                                    <td class="p-3">
+                                        <input type="number" step="any" oninput="calcClearanceTotal()" class="c-actual-amount w-full p-2 border border-slate-300 rounded text-right focus:border-blue-500 outline-none" required placeholder="0.00">
+                                        <input type="hidden" class="c-req-amount" value="${item.amount}">
+                                    </td>
+                                    <td class="p-3">
+                                        <input type="file" class="c-item-files w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer" multiple accept="image/*,application/pdf" required>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                        document.getElementById('clearanceForm').style.display = 'block';
+                        calcClearanceTotal();
+                        Swal.close();
+                    } else {
+                        Swal.fire('ข้อมูลไม่สมบูรณ์', 'คำร้องนี้ไม่มีข้อมูลรายการย่อย (อาจเป็นใบเก่า) กรุณาสร้างใบคำร้องใหม่เพื่อทดสอบครับ', 'warning');
+                    }
                 } else {
-                    Swal.fire('ไม่พบข้อมูล', 'ไม่พบเลขที่เอกสารนี้ในระบบ หรือพิมพ์ผิดรูปแบบ', 'error');
-                    document.getElementById('clearanceForm').style.display = 'none';
+                    Swal.fire('ไม่พบข้อมูล', 'ไม่พบเลขที่เอกสารนี้ในระบบ', 'error');
                 }
             }).catch(err => {
-                Swal.fire('ข้อผิดพลาด', 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้', 'error');
-            });
-        }
-
-        async function handleClearanceSubmit(e) {
-            e.preventDefault();
-            const btn = document.getElementById('submitClearBtn');
-            btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> กำลังอัปโหลด...';
-
-            Swal.fire({ title: 'กำลังอัปโหลด...', text: 'ระบบกำลังแนบไฟล์และสร้าง PDF ห้ามปิดหน้านี้', icon: 'info', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-
-            const fileInput = document.getElementById('c_files');
-            let filesBase64 = [];
-            
-            for (let i = 0; i < fileInput.files.length; i++) {
-                let file = fileInput.files[i];
-                let base64 = await new Promise((resolve) => {
-                    let reader = new FileReader();
-                    reader.onload = () => resolve(reader.result);
-                    reader.readAsDataURL(file);
-                });
-                filesBase64.push({ name: file.name, mimeType: file.type, base64: base64 });
-            }
-
-            const data = {
-                action: 'clearance',
-                reqId: document.getElementById('search_reqId').value,
-                event: document.getElementById('show_c_event').innerText,
-                borrowedAmount: document.getElementById('show_c_total').innerText,
-                actualAmount: document.getElementById('c_actual_amount').value,
-                files: filesBase64
-            };
-
-            fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(data) })
-            .then(res => res.json())
-            .then(res => {
-                if(res.status === "success") {
-                    Swal.fire('สำเร็จ!', 'ส่งเอกสารเคลียร์เงินและอัปโหลดใบเสร็จเรียบร้อย', 'success');
-                    e.target.reset();
-                    document.getElementById('clearanceForm').style.display = 'none';
-                } else {
-                    Swal.fire('ข้อผิดพลาด', res.message, 'error');
-                }
-                btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-check-circle mr-2"></i> ส่งเอกสารเคลียร์เงิน';
-            }).catch(err => {
-                Swal.fire('ข้อผิดพลาด', 'การเชื่อมต่อมีปัญหา กรุณาลองใหม่', 'error');
-                btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-check-circle mr-2"></i> ส่งเอกสารเคลียร์เงิน';
+                // เปลี่ยนข้อความแจ้งเตือนให้บอกสาเหตุที่แท้จริง
+                Swal.fire('ข้อผิดพลาด', 'รายละเอียด: ' + err.message, 'error');
+                console.error(err);
             });
         }
 

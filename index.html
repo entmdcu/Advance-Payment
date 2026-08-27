@@ -41,6 +41,9 @@
 
     <main class="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6">
         
+        <!-- ============================================== -->
+        <!-- แท็บที่ 1: ขอยืมเงิน -->
+        <!-- ============================================== -->
         <div id="tab-request" class="tab-content active">
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
                 <h2 class="text-2xl font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">ฟอร์มขอยืมเงินรองจ่าย</h2>
@@ -57,7 +60,7 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
                         <div class="sm:col-span-2">
                             <label class="block text-sm font-medium text-slate-700 mb-1">เรียน (ผู้อนุมัติ)</label>
-                            <input type="text" id="req_to" class="w-full p-2.5 border border-slate-300 rounded-lg outline-none" value="รองหัวหน้าภาควิชาโสต ศอ นาสิกวิทยา ฝ่ายบริหาร">
+                            <input type="text" id="req_to" class="w-full p-2.5 border border-slate-300 rounded-lg outline-none bg-slate-50 text-slate-500" value="หัวหน้าภาควิชาโสต ศอ นาสิกวิทยา" readonly>
                         </div>
                         <div class="sm:col-span-2">
                             <label class="block text-sm font-medium text-slate-700 mb-1">ชื่องาน / โครงการ <span class="text-red-500">*</span></label>
@@ -157,39 +160,70 @@
             </div>
         </div>
 
-        <div id="tab-clearance" class="tab-content"><div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 text-center text-slate-500">ระบบแจ้งค่าใช้จ่าย (เปิดให้บริการเร็วๆ นี้)</div></div>
-        <div id="tab-refund" class="tab-content"><div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 text-center text-slate-500">ระบบแจ้งคืนเงิน (เปิดให้บริการเร็วๆ นี้)</div></div>
+        <!-- ============================================== -->
+        <!-- แท็บที่ 2: แจ้งค่าใช้จ่าย (เคลียร์เงิน) -->
+        <!-- ============================================== -->
+        <div id="tab-clearance" class="tab-content">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
+                <h2 class="text-2xl font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">แจ้งค่าใช้จ่าย (เคลียร์เงินรองจ่าย)</h2>
+
+                <!-- ช่องค้นหาเอกสาร -->
+                <div class="flex flex-col sm:flex-row gap-2 mb-6">
+                    <input type="text" id="search_reqId" class="flex-1 p-3 border border-slate-300 rounded-lg outline-none focus:border-blue-500" placeholder="ระบุเลขที่เอกสาร เช่น เงินรองจ่าย 001/2569">
+                    <button type="button" onclick="searchRequest()" class="bg-slate-800 hover:bg-slate-900 text-white px-6 py-3 rounded-lg font-medium transition-all">
+                        <i class="fa-solid fa-magnifying-glass mr-2"></i> ค้นหาข้อมูล
+                    </button>
+                </div>
+
+                <!-- ฟอร์มเคลียร์เงิน (จะแสดงเมื่อค้นหาเจอเท่านั้น) -->
+                <form id="clearanceForm" onsubmit="handleClearanceSubmit(event)" style="display: none;">
+                    <div class="bg-blue-50 p-6 rounded-xl border border-blue-100 mb-6">
+                        <h3 class="font-semibold text-blue-800 mb-4">ข้อมูลอ้างอิงการยืมเงิน</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <p class="text-sm text-slate-700">ชื่องาน: <br><strong id="show_c_event" class="text-base">-</strong></p>
+                            <p class="text-sm text-slate-700">ผู้ขอยืม: <br><strong id="show_c_prof" class="text-base">-</strong></p>
+                            <p class="text-sm text-slate-700 sm:col-span-2">ยอดเงินที่ยืมไป: <strong id="show_c_total" class="text-xl text-blue-600">-</strong> บาท</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-6 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">ยอดใช้จ่ายจริงทั้งหมด (บาท) <span class="text-red-500">*</span></label>
+                            <input type="number" step="0.01" id="c_actual_amount" required class="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-right" placeholder="0.00">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">แนบรูปภาพใบเสร็จ / สลิปโอนเงิน (เลือกได้หลายไฟล์) <span class="text-red-500">*</span></label>
+                            <input type="file" id="c_files" multiple accept="image/*,application/pdf" required class="w-full p-3 border border-slate-300 rounded-lg bg-slate-50 cursor-pointer">
+                            <p class="text-xs text-slate-500 mt-2"><i class="fa-solid fa-circle-info mr-1"></i> รองรับไฟล์รูปภาพ (.jpg, .png) และ PDF</p>
+                        </div>
+                    </div>
+
+                    <div class="text-right">
+                        <button type="submit" id="submitClearBtn" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3 px-8 rounded-lg shadow-lg transition-all">
+                            <i class="fa-solid fa-check-circle mr-2"></i> ส่งเอกสารเคลียร์เงิน
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="tab-refund" class="tab-content">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 text-center text-slate-500">
+                <i class="fa-solid fa-clock-rotate-left text-4xl mb-4 text-slate-300"></i><br>
+                ระบบแจ้งคืนเงิน (เปิดให้บริการเร็วๆ นี้)
+            </div>
+        </div>
     </main>
 
     <footer class="bg-slate-800 text-slate-400 text-center p-4 text-xs mt-10">&copy; 2026 Finance System Hosted on GitHub Pages</footer>
 
     <script>
-        function getThaiBaht(amount) {
-            let number = parseFloat(amount.toString().replace(/,/g, '')).toFixed(2);
-            let split = number.toString().split('.');
-            let integerPart = split[0]; let fractionalPart = split[1];
-            const words = ["", "หนึ่ง", "สอง", "สาม", "สี่", "ห้า", "หก", "เจ็ด", "แปด", "เก้า"];
-            const positions = ["", "สิบ", "ร้อย", "พัน", "หมื่น", "แสน", "ล้าน"];
-            function convert(str) {
-                if (str === '0' || str === '00') return '';
-                let result = '';
-                for (let i = 0; i < str.length; i++) {
-                    let digit = parseInt(str.charAt(i));
-                    let position = str.length - i - 1;
-                    if (digit !== 0) {
-                        if (position === 1 && digit === 1) result += 'สิบ';
-                        else if (position === 1 && digit === 2) result += 'ยี่สิบ';
-                        else if (position === 0 && digit === 1 && str.length > 1 && str.charAt(str.length-2) !== '0') result += 'เอ็ด';
-                        else result += words[digit] + positions[position];
-                    }
-                }
-                return result;
-            }
-            let result = convert(integerPart) + 'บาท';
-            if (fractionalPart === '00') result += 'ถ้วน'; else result += convert(fractionalPart) + 'สตางค์';
-            return result === 'บาทถ้วน' ? 'ศูนย์บาทถ้วน' : result;
-        }
+        // ==========================================
+        // ⚠️ ใส่ Web App URL ของ Google Apps Script ที่นี่
+        // ==========================================
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzrBKlYRbb2smx6quwtF4UBzyK1SXWTh2FvG0R_mkZrOthExGHHS5jyNlS8Jrz1yGVN/exec';
 
+        // ระบบเปลี่ยนแท็บ
         function switchTab(tabId, btnElement) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(el => {
@@ -203,6 +237,7 @@
             }
         }
 
+        // --- ฟังก์ชันของหน้า 1 (ขอยืมเงิน) ---
         function addRequestRow() {
             const tbody = document.querySelector('#requestTable tbody');
             const tr = document.createElement('tr');
@@ -239,6 +274,7 @@
             });
 
             const data = {
+                action: 'request', // ระบุว่าส่งคำสั่งขอเงิน
                 requesterEmail: document.getElementById('req_email').value,
                 to: document.getElementById('req_to').value,
                 event: document.getElementById('req_event').value,
@@ -255,16 +291,117 @@
                 items: items
             };
 
-            const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyWlNUuFEJUiyzpj_z7apVYXkT5qi4aH7mIdxhNliWhwFR-d-vAyC10lxUTG-MEJ5s/exec';
-
-            fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
-            .then(() => {
-                Swal.fire({ title: 'สำเร็จ!', html: `ส่งคำร้องและเอกสาร PDF เรียบร้อยแล้ว`, icon: 'success' });
-                e.target.reset(); calculateTotal(); btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> ส่งคำร้อง & สร้าง PDF';
+            fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(data) })
+            .then(res => res.json())
+            .then(res => {
+                Swal.fire({ title: 'สำเร็จ!', html: `ส่งคำร้องและสร้าง PDF เรียบร้อยแล้ว`, icon: 'success' });
+                e.target.reset(); calculateTotal(); 
+                btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> ส่งคำร้อง & สร้าง PDF';
             }).catch(err => {
                 Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
                 btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> ส่งคำร้อง & สร้าง PDF';
             });
+        }
+
+        // --- ฟังก์ชันของหน้า 2 (เคลียร์เงิน) ---
+        function searchRequest() {
+            const reqId = document.getElementById('search_reqId').value;
+            if(!reqId) return Swal.fire('แจ้งเตือน', 'กรุณากรอกเลขที่เอกสาร', 'warning');
+
+            Swal.fire({ title: 'กำลังค้นหา...', text: 'กรุณารอสักครู่', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+            fetch(WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'search', searchId: reqId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    document.getElementById('show_c_event').innerText = data.event;
+                    document.getElementById('show_c_prof').innerText = data.professor;
+                    document.getElementById('show_c_total').innerText = data.total;
+                    document.getElementById('clearanceForm').style.display = 'block';
+                    Swal.close();
+                } else {
+                    Swal.fire('ไม่พบข้อมูล', 'ไม่พบเลขที่เอกสารนี้ในระบบ หรือพิมพ์ผิดรูปแบบ', 'error');
+                    document.getElementById('clearanceForm').style.display = 'none';
+                }
+            }).catch(err => {
+                Swal.fire('ข้อผิดพลาด', 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้', 'error');
+            });
+        }
+
+        async function handleClearanceSubmit(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitClearBtn');
+            btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> กำลังอัปโหลด...';
+
+            Swal.fire({ title: 'กำลังอัปโหลด...', text: 'ระบบกำลังแนบไฟล์และสร้าง PDF ห้ามปิดหน้านี้', icon: 'info', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+            const fileInput = document.getElementById('c_files');
+            let filesBase64 = [];
+            
+            for (let i = 0; i < fileInput.files.length; i++) {
+                let file = fileInput.files[i];
+                let base64 = await new Promise((resolve) => {
+                    let reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.readAsDataURL(file);
+                });
+                filesBase64.push({ name: file.name, mimeType: file.type, base64: base64 });
+            }
+
+            const data = {
+                action: 'clearance',
+                reqId: document.getElementById('search_reqId').value,
+                event: document.getElementById('show_c_event').innerText,
+                borrowedAmount: document.getElementById('show_c_total').innerText,
+                actualAmount: document.getElementById('c_actual_amount').value,
+                files: filesBase64
+            };
+
+            fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(data) })
+            .then(res => res.json())
+            .then(res => {
+                if(res.status === "success") {
+                    Swal.fire('สำเร็จ!', 'ส่งเอกสารเคลียร์เงินและอัปโหลดใบเสร็จเรียบร้อย', 'success');
+                    e.target.reset();
+                    document.getElementById('clearanceForm').style.display = 'none';
+                } else {
+                    Swal.fire('ข้อผิดพลาด', res.message, 'error');
+                }
+                btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-check-circle mr-2"></i> ส่งเอกสารเคลียร์เงิน';
+            }).catch(err => {
+                Swal.fire('ข้อผิดพลาด', 'การเชื่อมต่อมีปัญหา กรุณาลองใหม่', 'error');
+                btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-check-circle mr-2"></i> ส่งเอกสารเคลียร์เงิน';
+            });
+        }
+
+        // ฟังก์ชันแปลงเลขไทย
+        function getThaiBaht(amount) {
+            let number = parseFloat(amount.toString().replace(/,/g, '')).toFixed(2);
+            let split = number.toString().split('.');
+            let integerPart = split[0]; let fractionalPart = split[1];
+            const words = ["", "หนึ่ง", "สอง", "สาม", "สี่", "ห้า", "หก", "เจ็ด", "แปด", "เก้า"];
+            const positions = ["", "สิบ", "ร้อย", "พัน", "หมื่น", "แสน", "ล้าน"];
+            function convert(str) {
+                if (str === '0' || str === '00') return '';
+                let result = '';
+                for (let i = 0; i < str.length; i++) {
+                    let digit = parseInt(str.charAt(i));
+                    let position = str.length - i - 1;
+                    if (digit !== 0) {
+                        if (position === 1 && digit === 1) result += 'สิบ';
+                        else if (position === 1 && digit === 2) result += 'ยี่สิบ';
+                        else if (position === 0 && digit === 1 && str.length > 1 && str.charAt(str.length-2) !== '0') result += 'เอ็ด';
+                        else result += words[digit] + positions[position];
+                    }
+                }
+                return result;
+            }
+            let result = convert(integerPart) + 'บาท';
+            if (fractionalPart === '00') result += 'ถ้วน'; else result += convert(fractionalPart) + 'สตางค์';
+            return result === 'บาทถ้วน' ? 'ศูนย์บาทถ้วน' : result;
         }
     </script>
 </body>

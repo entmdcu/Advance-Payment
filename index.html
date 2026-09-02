@@ -489,71 +489,67 @@
         }
 
         // ส่งฟอร์มเคลียร์เงิน (ฟังก์ชันที่ขาดหายไปในโค้ดเดิม)
-        async function handleClearanceSubmit(e) {
+       async function handleClearanceSubmit(e) {
             e.preventDefault();
-
-            if (!currentClearanceData) {
-                return Swal.fire('แจ้งเตือน', 'กรุณาค้นหาเอกสารก่อนส่งข้อมูล', 'warning');
-            }
-
             const btn = document.getElementById('submitClearBtn');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> กำลังประมวลผล...';
-
-            Swal.fire({ title: 'กำลังอัปโหลดไฟล์และส่งข้อมูล...', text: 'ห้ามปิดหน้านี้', icon: 'info', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+            btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> กำลังอัปโหลด...';
+            Swal.fire({ title: 'กำลังอัปโหลด...', text: 'ระบบกำลังแนบไฟล์และสร้าง PDF ห้ามปิดหน้านี้', icon: 'info', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
 
             try {
-                const rows = document.querySelectorAll('#clearance_items_tbody tr.clearance-row');
-                const items = [];
-
-                for (const row of rows) {
-                    const name = row.querySelector('.c-item-name').value;
-                    const reqAmount = row.querySelector('.c-req-amount').value;
-                    const actualAmount = row.querySelector('.c-actual-amount').value;
-                    const fileInput = row.querySelector('.c-item-files');
-
-                    const files = [];
-                    if (fileInput.files && fileInput.files.length > 0) {
-                      // วนลูปแปลงรูปภาพ
-                for(let j=0; j<fileInput.files.length; j++) {
-                    let file = fileInput.files[j];
-                    let base64 = await compressImage(file); // เรียกใช้ตัวบีบอัด
-                    itemFilesBase64.push({ name: file.name, mimeType: file.type, base64: base64 });
-                }
+                let finalItems = [];
+                const rows = document.querySelectorAll('.clearance-row');
+                
+                for(let i=0; i<rows.length; i++) {
+                    let row = rows[i];
+                    let itemName = row.querySelector('.c-item-name').value;
+                    let reqAmount = row.querySelector('.c-req-amount').value;
+                    let actualAmount = row.querySelector('.c-actual-amount').value;
+                    let fileInput = row.querySelector('.c-item-files');
+                    
+                    let itemFilesBase64 = []; // <--- จุดที่ Error คือขาดบรรทัดนี้ไปครับ
+                    
+                    // วนลูปบีบอัดรูปภาพและแปลงไฟล์
+                    for(let j=0; j<fileInput.files.length; j++) {
+                        let file = fileInput.files[j];
+                        let base64 = await compressImage(file);
+                        itemFilesBase64.push({ name: file.name, mimeType: file.type, base64: base64 });
                     }
-
-                    items.push({ name, reqAmount, actualAmount, files });
+                    
+                    finalItems.push({ name: itemName, reqAmount: reqAmount, actualAmount: actualAmount, files: itemFilesBase64 });
                 }
 
-                const actualTotal = document.getElementById('c_sum_actual').innerText.replace(/,/g, '');
-
-                const payload = {
+                const data = {
                     action: 'clearance',
-                    reqId: currentClearanceData.reqId,
-                    event: currentClearanceData.event,
-                    professor: currentClearanceData.professor,
-                    borrowedAmount: currentClearanceData.borrowedAmount,
-                    actualAmount: actualTotal,
-                    items: items
+                    reqId: document.getElementById('search_reqId').value,
+                    event: document.getElementById('show_c_event').innerText,
+                    professor: document.getElementById('show_c_prof').innerText,
+                    borrowedAmount: document.getElementById('c_sum_req').innerText,
+                    actualAmount: document.getElementById('c_sum_actual').innerText,
+                    remark: document.getElementById('c_remark') ? document.getElementById('c_remark').value : "",
+                    items: finalItems
                 };
 
-                const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
-                if (!res.ok) throw new Error("HTTP " + res.status);
-                const result = await res.json();
-                if (result.status === 'error') throw new Error(result.message || 'เกิดข้อผิดพลาดฝั่งเซิร์ฟเวอร์');
-
-                Swal.fire({ title: 'สำเร็จ!', html: `ส่งเอกสารเคลียร์เงินเรียบร้อยแล้ว (อ้างอิง: ${result.reqId || currentClearanceData.reqId})`, icon: 'success' });
-
-                e.target.reset();
-                e.target.style.display = 'none';
-                document.getElementById('search_reqId').value = '';
-                currentClearanceData = null;
-            } catch (err) {
-                Swal.fire('ข้อผิดพลาด', 'รายละเอียด: ' + err.message, 'error');
-                console.error(err);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-check-circle mr-2"></i> ส่งเอกสารเคลียร์เงิน';
+                fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(data) })
+                .then(res => res.json())
+                .then(res => {
+                    if(res.status === "success") {
+                        Swal.fire('สำเร็จ!', 'ส่งเอกสารเคลียร์เงินและอัปโหลดใบเสร็จเรียบร้อย', 'success');
+                        e.target.reset();
+                        document.getElementById('clearanceForm').style.display = 'none';
+                        document.getElementById('c_sum_actual').innerText = "0.00";
+                        document.getElementById('c_sum_actual_text').innerText = "";
+                    } else {
+                        Swal.fire('ข้อผิดพลาด', res.message, 'error');
+                    }
+                    btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-check-circle mr-2"></i> ส่งเอกสารเคลียร์เงิน';
+                }).catch(err => {
+                    Swal.fire('ข้อผิดพลาด', 'การเชื่อมต่อมีปัญหา กรุณาลองใหม่', 'error');
+                    btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-check-circle mr-2"></i> ส่งเอกสารเคลียร์เงิน';
+                });
+            } catch (error) {
+                // จับ Error กรณีเกิดปัญหาฝั่งหน้าเว็บ
+                Swal.fire('ข้อผิดพลาด', 'รายละเอียด: ' + error.message, 'error');
+                btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-check-circle mr-2"></i> ส่งเอกสารเคลียร์เงิน';
             }
         }
 

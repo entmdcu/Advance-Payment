@@ -98,7 +98,7 @@
                             </div>
                             <div>
                                 <label class="block text-sm text-emerald-700 mb-1">จำนวนเงินสนับสนุน (บาท)</label>
-                                <input type="number" step="0.01" id="req_sponsor_amount" class="w-full p-2.5 border border-emerald-200 rounded-lg outline-none text-right" placeholder="0.00">
+                                <input type="text" inputmode="decimal" id="req_sponsor_amount" onblur="formatMoneyField(this)" class="w-full p-2.5 border border-emerald-200 rounded-lg outline-none text-right" placeholder="0.00">
                             </div>
                         </div>
                     </div>
@@ -122,7 +122,7 @@
                                     <tr class="border-t">
                                         <td class="p-2"><input type="text" class="item-name w-full border border-slate-300 rounded p-2 focus:border-blue-500" required></td>
                                         <td class="p-2"><input type="text" class="item-note w-full border border-slate-300 rounded p-2 focus:border-blue-500"></td>
-                                        <td class="p-2"><input type="number" step="any" oninput="calculateTotal()" class="amount-input w-full border border-slate-300 rounded p-2 text-right focus:border-blue-500" required></td>
+                                        <td class="p-2"><input type="text" inputmode="decimal" onblur="evalMath(this)" class="amount-input w-full border border-slate-300 rounded p-2 text-right focus:border-blue-500" placeholder="พิมพ์สูตรได้ เช่น 50*10" required></td>
                                         <td class="p-2 text-center"><button type="button" onclick="removeRow(this)" class="text-red-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button></td>
                                     </tr>
                                 </tbody>
@@ -162,7 +162,6 @@
 
         <!-- ============================================== -->
         <!-- แท็บที่ 2: แจ้งค่าใช้จ่าย (เคลียร์เงิน) -->
-        <!-- (ลบส่วนที่ซ้ำซ้อนออกแล้ว เหลือเพียงชุดเดียว) -->
         <!-- ============================================== -->
         <div id="tab-clearance" class="tab-content">
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
@@ -219,9 +218,15 @@
                                 <span id="c_sum_actual_text" class="text-xs text-blue-600"></span>
                             </div>
                         </div>
+                        <div class="flex justify-between items-center border-t border-slate-200 pt-2 mt-2">
+                            <span id="c_diff_label" class="font-bold text-emerald-600">ส่วนต่าง (คืนเงิน):</span>
+                            <div class="text-right">
+                                <span id="c_sum_diff" class="text-lg font-bold text-emerald-600">0.00</span> บาท
+                            </div>
+                        </div>
                     </div>
-                    
-<!-- ช่องกรอกหมายเหตุเพิ่มเติม -->
+
+                    <!-- ช่องกรอกหมายเหตุเพิ่มเติม -->
                     <div class="mb-6">
                         <label class="block text-sm font-medium text-slate-700 mb-1">หมายเหตุเพิ่มเติม (ถ้ามี)</label>
                         <textarea id="c_remark" rows="3" class="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" placeholder="เช่น ส่วนเงินที่ใช้จ่ายจริงทาง... จะทำการจ่ายคืนให้ในภายหลัง โดยเข้าบัญชี..."></textarea>
@@ -267,25 +272,37 @@
                 btnElement.classList.add('border-blue-600', 'text-blue-600', 'font-bold', 'bg-blue-50/50');
             }
         }
-        // ฟังก์ชันเครื่องคิดเลขในช่องกรอกเงิน
+
+        // ฟังก์ชันเครื่องคิดเลขในช่องกรอกเงิน (+ - * /) แล้วจัดรูปแบบด้วยคอมม่า
         function evalMath(input) {
             try {
                 // อนุญาตเฉพาะตัวเลข, จุด, และเครื่องหมาย + - * / ( )
-                let expr = input.value.replace(/[^\d\.\+\-\*\/\(\)]/g, ''); 
+                let expr = input.value.replace(/,/g, '').replace(/[^\d\.\+\-\*\/\(\)]/g, '');
                 if(expr) {
                     let result = eval(expr);
-                    input.value = result; // แสดงผลลัพธ์
+                    if (typeof result === 'number' && isFinite(result)) {
+                        input.value = result.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2});
+                    }
                 }
             } catch(e) {}
             calculateTotal();
         }
 
-        // อัปเดตฟังก์ชันคำนวณรวม (ให้ลบลูกน้ำออกก่อนบวก)
+        // จัดรูปแบบคอมม่าให้ช่องเงินทั่วไป (ไม่รองรับสูตรคำนวณ)
+        function formatMoneyField(input) {
+            let raw = input.value.replace(/,/g, '');
+            if(!raw) { input.value = ''; return; }
+            let num = parseFloat(raw);
+            if(isNaN(num)) { return; }
+            input.value = num.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2});
+        }
+
+        // รวมยอดจากช่องรายการ (รองรับตัวเลขที่มีคอมม่า)
         function calculateTotal() {
             let total = 0;
-            document.querySelectorAll('.amount-input').forEach(input => { 
+            document.querySelectorAll('.amount-input').forEach(input => {
                 let val = parseFloat(input.value.replace(/,/g, '') || 0);
-                total += val; 
+                total += val;
             });
             document.getElementById('req_total').innerText = total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
             document.getElementById('req_total_text').innerText = "(" + getThaiBaht(total) + ")";
@@ -323,7 +340,7 @@
                 reader.readAsDataURL(file);
             });
         }
-        
+
 
         // --- ฟังก์ชันของหน้า 1 (ขอยืมเงิน) ---
         function addRequestRow() {
@@ -333,17 +350,10 @@
             tr.innerHTML = `
                 <td class="p-2"><input type="text" class="item-name w-full border border-slate-300 rounded p-2 focus:border-blue-500" required></td>
                 <td class="p-2"><input type="text" class="item-note w-full border border-slate-300 rounded p-2 focus:border-blue-500"></td>
-               <td class="p-2"><input type="text" onblur="evalMath(this)" class="amount-input w-full border border-slate-300 rounded p-2 text-right focus:border-blue-500" placeholder="พิมพ์สูตรได้ เช่น 50*10" required></td>
+               <td class="p-2"><input type="text" inputmode="decimal" onblur="evalMath(this)" class="amount-input w-full border border-slate-300 rounded p-2 text-right focus:border-blue-500" placeholder="พิมพ์สูตรได้ เช่น 50*10" required></td>
                 <td class="p-2 text-center"><button type="button" onclick="removeRow(this)" class="text-red-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button></td>
             `;
             tbody.appendChild(tr);
-        }
-
-        function calculateTotal() {
-            let total = 0;
-            document.querySelectorAll('.amount-input').forEach(input => { total += parseFloat(input.value || 0); });
-            document.getElementById('req_total').innerText = total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            document.getElementById('req_total_text').innerText = "(" + getThaiBaht(total) + ")";
         }
 
         function removeRow(btn) { btn.closest('tr').remove(); calculateTotal(); }
@@ -358,7 +368,11 @@
 
             let items = [];
             document.querySelectorAll('#requestTable tbody tr').forEach(row => {
-                items.push({ name: row.querySelector('.item-name').value, note: row.querySelector('.item-note').value, amount: row.querySelector('.amount-input').value });
+                items.push({
+                    name: row.querySelector('.item-name').value,
+                    note: row.querySelector('.item-note').value,
+                    amount: row.querySelector('.amount-input').value.replace(/,/g, '')
+                });
             });
 
             const data = {
@@ -372,14 +386,12 @@
                 requester: document.getElementById('req_requester').value,
                 sponsorCompany: document.getElementById('req_sponsor_company').value,
                 sponsorAccount: document.getElementById('req_sponsor_account').value,
-                sponsorAmount: document.getElementById('req_sponsor_amount').value,
-                total: document.getElementById('req_total').innerText,
+                sponsorAmount: document.getElementById('req_sponsor_amount').value.replace(/,/g, ''),
+                total: document.getElementById('req_total').innerText.replace(/,/g, ''),
                 bankNo: document.getElementById('req_bank_no').value,
                 bankName: document.getElementById('req_bank_name').value,
                 items: items
             };
-            remark: document.getElementById('c_remark').value, 
-                // -------------------------
 
             fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(data) })
             .then(res => {
@@ -441,7 +453,7 @@
                                     <td class="p-3"><input type="text" class="c-item-name w-full bg-transparent outline-none font-medium text-slate-700" value="${item.name}" readonly></td>
                                     <td class="p-3 text-right text-slate-600">${Number(item.amount).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
                                     <td class="p-3">
-                                        <input type="number" step="any" oninput="calcClearanceTotal()" class="c-actual-amount w-full p-2 border border-slate-300 rounded text-right focus:border-blue-500 outline-none" required placeholder="0.00">
+                                        <input type="text" inputmode="decimal" oninput="calcClearanceTotal()" onblur="formatMoneyField(this); calcClearanceTotal()" class="c-actual-amount w-full p-2 border border-slate-300 rounded text-right focus:border-blue-500 outline-none" required placeholder="0.00">
                                         <input type="hidden" class="c-req-amount" value="${item.amount}">
                                     </td>
                                     <td class="p-3">
@@ -468,55 +480,56 @@
             });
         }
 
-        // รวมยอดใช้จริงทั้งหมด (ฟังก์ชันที่ขาดหายไปในโค้ดเดิม)
+        // รวมยอดใช้จริงทั้งหมด + คำนวณส่วนต่าง (คืนเงิน / จ่ายเพิ่ม)
         function calcClearanceTotal() {
             let total = 0;
             document.querySelectorAll('.c-actual-amount').forEach(input => {
-                total += parseFloat(input.value || 0);
+                total += parseFloat(input.value.replace(/,/g, '') || 0);
             });
             document.getElementById('c_sum_actual').innerText = total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
             document.getElementById('c_sum_actual_text').innerText = total > 0 ? "(" + getThaiBaht(total) + ")" : "";
+
+            let borrowed = parseFloat(document.getElementById('c_sum_req').innerText.replace(/,/g, '') || 0);
+            let diff = borrowed - total; // > 0 = ต้องคืนเงิน, < 0 = ต้องจ่ายเพิ่ม
+            const diffLabel = document.getElementById('c_diff_label');
+            const diffValue = document.getElementById('c_sum_diff');
+            if (diff >= 0) {
+                diffLabel.innerText = 'ส่วนต่าง (คืนเงินให้หน่วยงาน):';
+                diffLabel.className = 'font-bold text-emerald-600';
+                diffValue.className = 'text-lg font-bold text-emerald-600';
+            } else {
+                diffLabel.innerText = 'ส่วนต่าง (หน่วยงานต้องจ่ายเพิ่ม):';
+                diffLabel.className = 'font-bold text-red-600';
+                diffValue.className = 'text-lg font-bold text-red-600';
+            }
+            diffValue.innerText = Math.abs(diff).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
         }
 
-        // แปลงไฟล์เป็น base64
-        function fileToBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result); // data:mime;base64,xxxx
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
-        }
-
-        // ส่งฟอร์มเคลียร์เงิน (ฟังก์ชันที่ขาดหายไปในโค้ดเดิม)
-       async function handleClearanceSubmit(e) {
+        // ส่งฟอร์มเคลียร์เงิน
+        async function handleClearanceSubmit(e) {
             e.preventDefault();
             const btn = document.getElementById('submitClearBtn');
             btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> กำลังอัปโหลด...';
             Swal.fire({ title: 'กำลังอัปโหลด...', text: 'ระบบกำลังแนบไฟล์และสร้าง PDF ห้ามปิดหน้านี้', icon: 'info', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
 
             try {
-                let finalItems = [];
-                const rows = document.querySelectorAll('.clearance-row');
-                
-                for(let i=0; i<rows.length; i++) {
-                    let row = rows[i];
+                const rows = Array.from(document.querySelectorAll('.clearance-row'));
+
+                // บีบอัด/แปลงไฟล์ทุกแถวและทุกไฟล์พร้อมกัน (แทนการวนลูปทีละไฟล์)
+                // ช่วยลดเวลารอเมื่อมีหลายรายการ/หลายใบเสร็จ เพราะทุกไฟล์ทำงานขนานกันแทนที่จะรอทีละไฟล์
+                let finalItems = await Promise.all(rows.map(async (row) => {
                     let itemName = row.querySelector('.c-item-name').value;
                     let reqAmount = row.querySelector('.c-req-amount').value;
-                    let actualAmount = row.querySelector('.c-actual-amount').value;
+                    let actualAmount = row.querySelector('.c-actual-amount').value.replace(/,/g, '');
                     let fileInput = row.querySelector('.c-item-files');
-                    
-                    let itemFilesBase64 = []; // <--- จุดที่ Error คือขาดบรรทัดนี้ไปครับ
-                    
-                    // วนลูปบีบอัดรูปภาพและแปลงไฟล์
-                    for(let j=0; j<fileInput.files.length; j++) {
-                        let file = fileInput.files[j];
+
+                    let itemFilesBase64 = await Promise.all(Array.from(fileInput.files).map(async (file) => {
                         let base64 = await compressImage(file);
-                        itemFilesBase64.push({ name: file.name, mimeType: file.type, base64: base64 });
-                    }
-                    
-                    finalItems.push({ name: itemName, reqAmount: reqAmount, actualAmount: actualAmount, files: itemFilesBase64 });
-                }
+                        return { name: file.name, mimeType: file.type, base64: base64 };
+                    }));
+
+                    return { name: itemName, reqAmount: reqAmount, actualAmount: actualAmount, files: itemFilesBase64 };
+                }));
 
                 const data = {
                     action: 'clearance',
@@ -525,6 +538,8 @@
                     professor: document.getElementById('show_c_prof').innerText,
                     borrowedAmount: document.getElementById('c_sum_req').innerText,
                     actualAmount: document.getElementById('c_sum_actual').innerText,
+                    diffAmount: document.getElementById('c_sum_diff').innerText,
+                    diffType: document.getElementById('c_diff_label').innerText.includes('จ่ายเพิ่ม') ? 'pay_more' : 'refund',
                     remark: document.getElementById('c_remark') ? document.getElementById('c_remark').value : "",
                     items: finalItems
                 };

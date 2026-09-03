@@ -79,23 +79,31 @@
 
                     <!-- ส่วนข้อมูลการสนับสนุนจากบริษัท -->
                     <div class="bg-emerald-50 p-6 rounded-xl border border-emerald-100 mb-8">
-                        <h3 class="font-semibold text-emerald-800 mb-4"><i class="fa-solid fa-hand-holding-dollar mr-2"></i> ข้อมูลการสนับสนุนจากบริษัท (ถ้ามี)</h3>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <div class="sm:col-span-3">
-                                <label class="block text-sm text-emerald-700 mb-1">ได้รับสนับสนุนจากบริษัท</label>
-                                <input type="text" id="req_sponsor_company" class="w-full p-2.5 border border-emerald-200 rounded-lg outline-none" placeholder="ระบุชื่อบริษัท (ถ้ามี)">
-                            </div>
-                            <div class="sm:col-span-2">
-                                <label class="block text-sm text-emerald-700 mb-1">ทำการโอนเข้าบัญชี</label>
-                                <select id="req_sponsor_account" class="w-full p-2.5 border border-emerald-200 rounded-lg outline-none bg-white">
-                                    <option value="">-- ไม่ระบุ / ไม่มี --</option>
-                                    <option value="KCHM">KCHM</option>
-                                    <option value="มูลนิธิคณะแพทย์">มูลนิธิคณะแพทย์</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm text-emerald-700 mb-1">จำนวนเงินสนับสนุน (บาท)</label>
-                                <input type="text" inputmode="decimal" id="req_sponsor_amount" onblur="formatMoneyField(this)" class="w-full p-2.5 border border-emerald-200 rounded-lg outline-none text-right" placeholder="0.00">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-semibold text-emerald-800"><i class="fa-solid fa-hand-holding-dollar mr-2"></i> ข้อมูลการสนับสนุนจากบริษัท (ถ้ามี)</h3>
+                            <button type="button" onclick="addSponsorRow()" class="text-sm bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-lg hover:bg-emerald-200 transition"><i class="fa-solid fa-plus"></i> เพิ่มรายการ</button>
+                        </div>
+                        <div id="sponsorRows" class="space-y-4">
+                            <div class="sponsor-row bg-white rounded-lg border border-emerald-200 p-4 relative">
+                                <button type="button" onclick="removeSponsorRow(this)" class="absolute top-3 right-3 text-red-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pr-8">
+                                    <div class="sm:col-span-3">
+                                        <label class="block text-sm text-emerald-700 mb-1">ได้รับสนับสนุนจากบริษัท</label>
+                                        <input type="text" class="sponsor-company w-full p-2.5 border border-emerald-200 rounded-lg outline-none" placeholder="ระบุชื่อบริษัท (ถ้ามี)">
+                                    </div>
+                                    <div class="sm:col-span-2">
+                                        <label class="block text-sm text-emerald-700 mb-1">ทำการโอนเข้าบัญชี</label>
+                                        <select class="sponsor-account w-full p-2.5 border border-emerald-200 rounded-lg outline-none bg-white">
+                                            <option value="">-- ไม่ระบุ / ไม่มี --</option>
+                                            <option value="KCHM">KCHM</option>
+                                            <option value="มูลนิธิคณะแพทย์">มูลนิธิคณะแพทย์</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm text-emerald-700 mb-1">จำนวนเงินสนับสนุน (บาท)</label>
+                                        <input type="text" inputmode="decimal" class="sponsor-amount w-full p-2.5 border border-emerald-200 rounded-lg outline-none text-right" onblur="formatMoneyField(this)" placeholder="0.00">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -259,7 +267,7 @@
         // ==========================================
         // ⚠️ ใส่ Web App URL ของ Google Apps Script ที่นี่
         // ==========================================
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwwHuOFeuaicH5-VPbWL5pz8M4NwYpnhfTwuTaWGBIueapKG6FeKiOLFn5MPqNj4W97/exec';
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbz9zVUAcEVgYQZdGAx29RC84TQAS5uwG0aOVcC6ocoPJ0FOwr8pOK2bJ0JTnxv5v9n4/execอ';
 
         // เก็บข้อมูลของรายการที่ค้นเจอไว้ใช้ตอนส่งฟอร์มเคลียร์เงิน
         let currentClearanceData = null; // { reqId, event, professor, borrowedAmount }
@@ -363,6 +371,39 @@
 
         function removeRow(btn) { btn.closest('tr').remove(); calculateTotal(); }
 
+        // --- ฟังก์ชันของกล่องผู้สนับสนุน (รองรับหลายบริษัท) ---
+        function addSponsorRow() {
+            const container = document.getElementById('sponsorRows');
+            const div = document.createElement('div');
+            div.className = 'sponsor-row bg-white rounded-lg border border-emerald-200 p-4 relative';
+            div.innerHTML = `
+                <button type="button" onclick="removeSponsorRow(this)" class="absolute top-3 right-3 text-red-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pr-8">
+                    <div class="sm:col-span-3">
+                        <label class="block text-sm text-emerald-700 mb-1">ได้รับสนับสนุนจากบริษัท</label>
+                        <input type="text" class="sponsor-company w-full p-2.5 border border-emerald-200 rounded-lg outline-none" placeholder="ระบุชื่อบริษัท (ถ้ามี)">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-sm text-emerald-700 mb-1">ทำการโอนเข้าบัญชี</label>
+                        <select class="sponsor-account w-full p-2.5 border border-emerald-200 rounded-lg outline-none bg-white">
+                            <option value="">-- ไม่ระบุ / ไม่มี --</option>
+                            <option value="KCHM">KCHM</option>
+                            <option value="มูลนิธิคณะแพทย์">มูลนิธิคณะแพทย์</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-emerald-700 mb-1">จำนวนเงินสนับสนุน (บาท)</label>
+                        <input type="text" inputmode="decimal" class="sponsor-amount w-full p-2.5 border border-emerald-200 rounded-lg outline-none text-right" onblur="formatMoneyField(this)" placeholder="0.00">
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function removeSponsorRow(btn) {
+            btn.closest('.sponsor-row').remove();
+        }
+
         function handleRequestSubmit(e) {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
@@ -380,6 +421,16 @@
                 });
             });
 
+            let sponsors = [];
+            document.querySelectorAll('.sponsor-row').forEach(row => {
+                let company = row.querySelector('.sponsor-company').value.trim();
+                let account = row.querySelector('.sponsor-account').value;
+                let amount = row.querySelector('.sponsor-amount').value.replace(/,/g, '');
+                if (company) {
+                    sponsors.push({ company: company, account: account, amount: amount });
+                }
+            });
+
             const data = {
                 action: 'request', // ระบุว่าส่งคำสั่งขอเงิน
                 requesterEmail: document.getElementById('req_email').value,
@@ -389,9 +440,7 @@
                 date: document.getElementById('req_date').value,
                 professor: document.getElementById('req_professor').value,
                 requester: document.getElementById('req_requester').value,
-                sponsorCompany: document.getElementById('req_sponsor_company').value,
-                sponsorAccount: document.getElementById('req_sponsor_account').value,
-                sponsorAmount: document.getElementById('req_sponsor_amount').value.replace(/,/g, ''),
+                sponsors: sponsors,
                 total: document.getElementById('req_total').innerText.replace(/,/g, ''),
                 bankNo: document.getElementById('req_bank_no').value,
                 bankName: document.getElementById('req_bank_name').value,

@@ -6,7 +6,7 @@
     <title>ระบบจัดการเงินรองจ่ายออนไลน์</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;0&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
@@ -31,10 +31,7 @@
                 <i class="fa-solid fa-1 mr-1"></i> ขอยืมเงิน
             </button>
             <button onclick="switchTab('tab-clearance', this)" class="nav-btn flex-1 whitespace-nowrap py-4 px-4 sm:px-6 text-center border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-colors">
-                <i class="fa-solid fa-2 mr-1"></i> แจ้งค่าใช้จ่าย (เคลียร์)
-            </button>
-            <button onclick="switchTab('tab-refund', this)" class="nav-btn flex-1 whitespace-nowrap py-4 px-4 sm:px-6 text-center border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-colors">
-                <i class="fa-solid fa-3 mr-1"></i> คืนเงิน
+                <i class="fa-solid fa-2 mr-1"></i> แจ้งค่าใช้จ่าย / คืนเงิน
             </button>
         </div>
     </nav>
@@ -185,6 +182,12 @@
                         </div>
                     </div>
 
+                    <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100 mb-6">
+                        <h3 class="font-semibold text-indigo-800 mb-4"><i class="fa-regular fa-envelope mr-2"></i> ข้อมูลผู้แจ้งเคลียร์เงิน</h3>
+                        <label class="block text-sm text-indigo-700 mb-1">อีเมลผู้แจ้ง (เพื่อรับสำเนา PDF) <span class="text-red-500">*</span></label>
+                        <input type="email" id="c_email" required class="w-full p-2.5 border border-indigo-200 rounded-lg outline-none">
+                    </div>
+
                     <!-- ตารางรายการเพื่อกรอกยอดใช้จริง -->
                     <div class="mb-6 overflow-x-auto">
                         <table class="w-full text-left text-sm border border-slate-200 min-w-[700px]">
@@ -226,6 +229,14 @@
                         </div>
                     </div>
 
+                    <!-- กล่องคืนเงิน / จ่ายเพิ่ม: ขึ้นอัตโนมัติเมื่อมีส่วนต่าง ให้แนบสลิปโอนเงิน -->
+                    <div id="refund_box" class="bg-amber-50 p-6 rounded-xl border border-amber-100 mb-6" style="display: none;">
+                        <h3 id="refund_box_title" class="font-semibold text-amber-800 mb-2"><i class="fa-solid fa-money-bill-transfer mr-2"></i> หลักฐานการโอนเงิน (สลิป)</h3>
+                        <p id="refund_box_desc" class="text-sm text-amber-700 mb-3"></p>
+                        <input type="file" id="c_slip_file" accept="image/*,application/pdf" class="w-full text-sm text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-amber-100 file:text-amber-700 hover:file:bg-amber-200 cursor-pointer">
+                        <p class="text-xs text-amber-600 mt-2"><i class="fa-solid fa-circle-info mr-1"></i> แนะนำให้แนบเป็นรูปภาพ (สกรีนช็อต/ถ่ายสลิป) เพื่อให้ระบบฝังรูปสลิปลงในไฟล์ PDF ให้อัตโนมัติ ถ้าแนบเป็นไฟล์ PDF ระบบจะเก็บไฟล์แยกไว้ในโฟลเดอร์เอกสารให้ แต่จะไม่ฝังลงใน PDF หลัก</p>
+                    </div>
+
                     <!-- ช่องกรอกหมายเหตุเพิ่มเติม -->
                     <div class="mb-6">
                         <label class="block text-sm font-medium text-slate-700 mb-1">หมายเหตุเพิ่มเติม (ถ้ามี)</label>
@@ -240,7 +251,7 @@
             </div>
         </div>
 
- 
+    </main>
 
     <footer class="bg-slate-800 text-slate-400 text-center p-4 text-xs mt-10">&copy; 2026 Finance System Hosted on GitHub Pages</footer>
 
@@ -248,7 +259,7 @@
         // ==========================================
         // ⚠️ ใส่ Web App URL ของ Google Apps Script ที่นี่
         // ==========================================
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwquvIMp97SPgUBNMMIJnRzk7zSgPO504O3TPHj7E-9Z2BxghWemvypxcSj2I77-q6j/exec';
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwwHuOFeuaicH5-VPbWL5pz8M4NwYpnhfTwuTaWGBIueapKG6FeKiOLFn5MPqNj4W97/exec';
 
         // เก็บข้อมูลของรายการที่ค้นเจอไว้ใช้ตอนส่งฟอร์มเคลียร์เงิน
         let currentClearanceData = null; // { reqId, event, professor, borrowedAmount }
@@ -487,16 +498,32 @@
             let diff = borrowed - total; // > 0 = ต้องคืนเงิน, < 0 = ต้องจ่ายเพิ่ม
             const diffLabel = document.getElementById('c_diff_label');
             const diffValue = document.getElementById('c_sum_diff');
-            if (diff >= 0) {
+            const refundBox = document.getElementById('refund_box');
+            const refundBoxTitle = document.getElementById('refund_box_title');
+            const refundBoxDesc = document.getElementById('refund_box_desc');
+            const diffAbsStr = Math.abs(diff).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+            if (diff > 0) {
                 diffLabel.innerText = 'ส่วนต่าง (คืนเงินให้หน่วยงาน):';
                 diffLabel.className = 'font-bold text-emerald-600';
                 diffValue.className = 'text-lg font-bold text-emerald-600';
-            } else {
+                refundBox.style.display = 'block';
+                refundBoxTitle.innerHTML = '<i class="fa-solid fa-money-bill-transfer mr-2"></i> หลักฐานการโอนเงินคืน (สลิป)';
+                refundBoxDesc.innerText = 'แนบสลิปการโอนเงินคืนให้หน่วยงาน จำนวน ' + diffAbsStr + ' บาท';
+            } else if (diff < 0) {
                 diffLabel.innerText = 'ส่วนต่าง (หน่วยงานต้องจ่ายเพิ่ม):';
                 diffLabel.className = 'font-bold text-red-600';
                 diffValue.className = 'text-lg font-bold text-red-600';
+                refundBox.style.display = 'block';
+                refundBoxTitle.innerHTML = '<i class="fa-solid fa-money-bill-transfer mr-2"></i> หลักฐานการโอนเงินจ่ายเพิ่ม (สลิป)';
+                refundBoxDesc.innerText = 'แนบสลิปการโอนเงินจ่ายเพิ่มให้ผู้ขอยืม จำนวน ' + diffAbsStr + ' บาท';
+            } else {
+                diffLabel.innerText = 'ส่วนต่าง (ใช้จ่ายพอดี ไม่มีเงินคืน/เพิ่ม):';
+                diffLabel.className = 'font-bold text-slate-500';
+                diffValue.className = 'text-lg font-bold text-slate-500';
+                refundBox.style.display = 'none';
             }
-            diffValue.innerText = Math.abs(diff).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            diffValue.innerText = diffAbsStr;
         }
 
         // ส่งฟอร์มเคลียร์เงิน
@@ -509,9 +536,9 @@
             try {
                 const rows = Array.from(document.querySelectorAll('.clearance-row'));
 
-                // บีบอัด/แปลงไฟล์ทุกแถวและทุกไฟล์พร้อมกัน (แทนการวนลูปทีละไฟล์)
+                // บีบอัด/แปลงไฟล์ทุกแถว + ทุกไฟล์ + สลิปโอนเงิน พร้อมกันทั้งหมด (แทนการวนลูปทีละไฟล์)
                 // ช่วยลดเวลารอเมื่อมีหลายรายการ/หลายใบเสร็จ เพราะทุกไฟล์ทำงานขนานกันแทนที่จะรอทีละไฟล์
-                let finalItems = await Promise.all(rows.map(async (row) => {
+                const itemsPromise = Promise.all(rows.map(async (row) => {
                     let itemName = row.querySelector('.c-item-name').value;
                     let reqAmount = row.querySelector('.c-req-amount').value;
                     let actualAmount = row.querySelector('.c-actual-amount').value.replace(/,/g, '');
@@ -525,17 +552,31 @@
                     return { name: itemName, reqAmount: reqAmount, actualAmount: actualAmount, files: itemFilesBase64 };
                 }));
 
+                const slipInput = document.getElementById('c_slip_file');
+                const slipPromise = (async () => {
+                    if (slipInput.files.length > 0) {
+                        const file = slipInput.files[0];
+                        const base64 = await compressImage(file);
+                        return { name: file.name, mimeType: file.type, base64: base64 };
+                    }
+                    return null;
+                })();
+
+                const [finalItems, slipData] = await Promise.all([itemsPromise, slipPromise]);
+
                 const data = {
                     action: 'clearance',
                     reqId: document.getElementById('search_reqId').value,
                     event: document.getElementById('show_c_event').innerText,
                     professor: document.getElementById('show_c_prof').innerText,
+                    clearerEmail: document.getElementById('c_email').value,
                     borrowedAmount: document.getElementById('c_sum_req').innerText,
                     actualAmount: document.getElementById('c_sum_actual').innerText,
                     diffAmount: document.getElementById('c_sum_diff').innerText,
-                    diffType: document.getElementById('c_diff_label').innerText.includes('จ่ายเพิ่ม') ? 'pay_more' : 'refund',
+                    diffType: document.getElementById('c_diff_label').innerText.includes('จ่ายเพิ่ม') ? 'pay_more' : (document.getElementById('c_diff_label').innerText.includes('พอดี') ? 'exact' : 'refund'),
                     remark: document.getElementById('c_remark') ? document.getElementById('c_remark').value : "",
-                    items: finalItems
+                    items: finalItems,
+                    slip: slipData
                 };
 
                 fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(data) })

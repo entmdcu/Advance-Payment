@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body { font-family: 'Sarabun', sans-serif; background-color: #f1f5f9; }
     </style>
@@ -21,7 +20,8 @@
                 <i class="fa-solid fa-chart-pie text-2xl text-emerald-400"></i>
                 <h1 class="text-xl font-bold">Finance Dashboard (Admin)</h1>
             </div>
-            <a href="index.html" class="text-sm text-slate-300 hover:text-white transition"><i class="fa-solid fa-arrow-right-from-bracket mr-1"></i> กลับหน้าหลัก</a>
+            <!-- ปุ่มกลับไปหน้าหลัก (index.html) -->
+            <a href="index.html" class="text-sm text-slate-300 hover:text-white transition"><i class="fa-solid fa-arrow-right-from-bracket mr-1"></i> กลับหน้าฟอร์ม</a>
         </div>
     </header>
 
@@ -46,7 +46,6 @@
                         </tr>
                     </thead>
                     <tbody id="dashboard_tbody" class="divide-y divide-slate-200">
-                        <!-- ข้อมูลจะถูกดึงมาแสดงตรงนี้ -->
                         <tr><td colspan="4" class="p-10 text-center text-slate-500"><i class="fa-solid fa-spinner fa-spin mr-2 text-xl"></i>กำลังโหลดข้อมูลจากฐานข้อมูล...</td></tr>
                     </tbody>
                 </table>
@@ -55,17 +54,11 @@
     </main>
 
     <script>
-        // ==========================================
-        // ⚠️ นำ Web App URL ของคุณมาใส่ตรงนี้
-        // ==========================================
-        const WEB_APP_URL = 'ใส่_URL_ของ_APPS_SCRIPT_ที่นี่';
+        // ใช้ Web App URL ตัวปัจจุบันของคุณ
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbynqkoEjhTSw0mg_EtK6-76J6l9-gxAmn8h6ioR21pxFr8021DqfCChzJiHCk45eea2/exec';
 
-        // โหลดข้อมูลทันทีเมื่อเปิดหน้าเว็บ
-        window.onload = () => {
-            loadDashboard();
-        };
+        window.onload = () => { loadDashboard(); };
 
-        // ฟังก์ชันโหลดข้อมูล Dashboard
         function loadDashboard() {
             const tbody = document.getElementById('dashboard_tbody');
             tbody.innerHTML = '<tr><td colspan="4" class="p-10 text-center text-blue-600"><i class="fa-solid fa-spinner fa-spin mr-2 text-2xl"></i>กำลังซิงค์ข้อมูล...</td></tr>';
@@ -80,7 +73,7 @@
                     tbody.innerHTML = '';
                     res.data.forEach(row => {
                         
-                        // เช็กสถานะเพื่อกำหนดสีกรอบข้อความ
+                        // กำหนดสีป้ายสถานะ
                         let statusColor = 'bg-slate-100 text-slate-800 border-slate-200';
                         if (row.status.includes('เคลียร์')) {
                             statusColor = 'bg-emerald-50 text-emerald-700 border-emerald-200';

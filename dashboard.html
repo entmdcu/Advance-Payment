@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบหลังบ้าน - จัดการเงินรองจ่าย</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body { font-family: 'Sarabun', sans-serif; background-color: #f1f5f9; }
+    </style>
+</head>
+<body class="text-slate-800 h-screen flex flex-col">
+
+    <!-- แถบเมนูด้านบน -->
+    <header class="bg-slate-900 text-white p-4 shadow-md">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-chart-pie text-2xl text-emerald-400"></i>
+                <h1 class="text-xl font-bold">Finance Dashboard (Admin)</h1>
+            </div>
+            <a href="index.html" class="text-sm text-slate-300 hover:text-white transition"><i class="fa-solid fa-arrow-right-from-bracket mr-1"></i> กลับหน้าหลัก</a>
+        </div>
+    </header>
+
+    <!-- พื้นที่แสดงข้อมูล -->
+    <main class="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-6 mt-4">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
+            <div class="flex flex-col sm:flex-row justify-between items-center mb-6 border-b border-slate-100 pb-4 gap-4">
+                <h2 class="text-2xl font-bold text-slate-800">📊 ภาพรวมสถานะคำร้องทั้งหมด</h2>
+                <button onclick="loadDashboard()" class="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-5 py-2 rounded-lg font-medium transition flex items-center">
+                    <i class="fa-solid fa-rotate-right mr-2"></i> โหลดข้อมูลล่าสุด
+                </button>
+            </div>
+            
+            <div class="overflow-x-auto rounded-lg border border-slate-200">
+                <table class="w-full text-left text-sm min-w-[800px]">
+                    <thead class="bg-slate-800 text-white">
+                        <tr>
+                            <th class="p-4 font-medium whitespace-nowrap">เลขที่เอกสาร</th>
+                            <th class="p-4 font-medium">ชื่องาน / ผู้ขอยืม</th>
+                            <th class="p-4 font-medium whitespace-nowrap text-right">ยอดเงิน (บาท)</th>
+                            <th class="p-4 font-medium whitespace-nowrap text-center w-1/4">สถานะ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dashboard_tbody" class="divide-y divide-slate-200">
+                        <!-- ข้อมูลจะถูกดึงมาแสดงตรงนี้ -->
+                        <tr><td colspan="4" class="p-10 text-center text-slate-500"><i class="fa-solid fa-spinner fa-spin mr-2 text-xl"></i>กำลังโหลดข้อมูลจากฐานข้อมูล...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // ==========================================
+        // ⚠️ นำ Web App URL ของคุณมาใส่ตรงนี้
+        // ==========================================
+        const WEB_APP_URL = 'ใส่_URL_ของ_APPS_SCRIPT_ที่นี่';
+
+        // โหลดข้อมูลทันทีเมื่อเปิดหน้าเว็บ
+        window.onload = () => {
+            loadDashboard();
+        };
+
+        // ฟังก์ชันโหลดข้อมูล Dashboard
+        function loadDashboard() {
+            const tbody = document.getElementById('dashboard_tbody');
+            tbody.innerHTML = '<tr><td colspan="4" class="p-10 text-center text-blue-600"><i class="fa-solid fa-spinner fa-spin mr-2 text-2xl"></i>กำลังซิงค์ข้อมูล...</td></tr>';
+            
+            fetch(WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'dashboard' })
+            })
+            .then(res => res.json())
+            .then(res => {
+                if(res.status === 'success' && res.data.length > 0) {
+                    tbody.innerHTML = '';
+                    res.data.forEach(row => {
+                        
+                        // เช็กสถานะเพื่อกำหนดสีกรอบข้อความ
+                        let statusColor = 'bg-slate-100 text-slate-800 border-slate-200';
+                        if (row.status.includes('เคลียร์')) {
+                            statusColor = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                        } else if (row.status.includes('รอ')) {
+                            statusColor = 'bg-amber-50 text-amber-700 border-amber-200';
+                        }
+                        
+                        // จัดรูปแบบตัวเลข
+                        let formattedTotal = "0.00";
+                        if(row.total) {
+                           formattedTotal = Number(row.total.toString().replace(/,/g, '')).toLocaleString('en-US', {minimumFractionDigits: 2});
+                        }
+
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="p-4 font-semibold text-slate-700">${row.reqId}</td>
+                                <td class="p-4 text-slate-600">
+                                    <div class="font-medium text-slate-800 mb-1">${row.event}</div>
+                                    <div class="text-xs text-slate-400"><i class="fa-regular fa-user mr-1"></i>${row.requester ? row.requester.split('(')[0] : '-'}</div>
+                                </td>
+                                <td class="p-4 text-right font-medium text-slate-700">${formattedTotal}</td>
+                                <td class="p-4 text-center">
+                                    <div class="inline-block px-3 py-1.5 rounded-full text-xs font-semibold border ${statusColor}">
+                                        ${row.status}
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="4" class="p-10 text-center text-slate-500"><i class="fa-regular fa-folder-open text-2xl mb-2 block"></i> ยังไม่มีข้อมูลคำร้องในระบบ</td></tr>';
+                }
+            }).catch(err => {
+                tbody.innerHTML = '<tr><td colspan="4" class="p-10 text-center text-red-500"><i class="fa-solid fa-triangle-exclamation text-2xl mb-2 block"></i> เกิดข้อผิดพลาดในการเชื่อมต่อข้อมูล</td></tr>';
+            });
+        }
+    </script>
+</body>
+</html>
